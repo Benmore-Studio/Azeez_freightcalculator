@@ -26,8 +26,8 @@ export default function Hero() {
             <Link href="/calculator">
               <Button
                 size="lg"
-                className="bg-white text-blue-900 hover:bg-blue-50 font-semibold px-8 py-4 text-lg min-w-[200px]"
-                icon={<FaCalculator />}
+                className="bg-white text-blue-900 hover:bg-gray-100 hover:text-blue-950 font-semibold px-8 py-4 text-lg min-w-[200px] transition-all"
+                icon={<FaCalculator className="text-blue-900" />}
                 iconPosition="left"
               >
                 Try Calculator
@@ -36,9 +36,8 @@ export default function Hero() {
             <Link href="/auth/signup">
               <Button
                 size="lg"
-                variant="secondary"
-                className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8 py-4 text-lg min-w-[200px]"
-                icon={<FaUserPlus />}
+                className="bg-blue-700 border-2 border-blue-600 text-white hover:bg-blue-600 hover:border-blue-500 font-semibold px-8 py-4 text-lg min-w-[200px] transition-all"
+                icon={<FaUserPlus className="text-white" />}
                 iconPosition="left"
               >
                 Create Free Account
