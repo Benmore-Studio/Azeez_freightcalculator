@@ -1,5 +1,4 @@
 import React from "react";
-import { SiTicktick } from "react-icons/si";
 import { MdOutlineDone } from "react-icons/md";
 import { GoTrophy } from "react-icons/go";
 import { BsLightningCharge, BsTruck } from "react-icons/bs";
@@ -8,66 +7,53 @@ import { MdKeyboardArrowRight } from "react-icons/md";
 import Achievements from "./Achievements";
 import { CiStar } from "react-icons/ci";
 import { LuTruck } from "react-icons/lu";
-import { FaArrowDown } from "react-icons/fa";
 import { FaArrowUp } from "react-icons/fa";
 import Ratecalc from "../RateCalc/Ratecalc";
+import { Container, ProgressHeader, Card, Button, ProgressBar } from "@/components/ui";
 
 
 
 function Step5({ barvalue, setBarvalue, step, setStep }) {
   return (
-    <div className="mx-auto w-[50%] ">
-      <div className="shadow-sm rounded-2xl p-4 mt-4 bg-white">
-        <div className="w-full h-5 flex justify-between ">
-          <div className="flex items-center gap-2">
-            <SiTicktick className="text-blue-600" />
-            <p className="font-bold">Let's get you set up</p>
-          </div>
-          <p className="text-blue-600 font-bold">100% Setup Complete</p>
-        </div>
+    <Container>
+      <ProgressHeader
+        title="Let's get you set up"
+        percentage={Number(barvalue)}
+        className="mt-4"
+      />
 
-        <progress
-          value={barvalue}
-          max="100"
-          className="w-full h-2  mt-3 overflow-hidden [&::-webkit-progress-bar]:bg-gray-300
-                   [&::-webkit-progress-value]:bg-blue-800 [&::-moz-progress-bar]:bg-blue-500 [&::-webkit-progress-value]:rounded-full
-                   [&::-webkit-progress-bar]:rounded-full"
-        ></progress>
-      </div>
-
-      <div className="bg-green-100 w-full flex flex-col items-center p-3 gap-8 mt-6 ">
+      <Card variant="flat" className="bg-green-50 border-2 border-green-200 flex flex-col items-center py-8 px-4 mt-6">
         <MdOutlineDone
           size={60}
-          className="rounded-full p-3 bg-black text-white bg-gradient-to-r from-green-400 to-teal-400 "
+          className="rounded-full p-3 bg-gradient-to-r from-green-400 to-teal-400 text-white"
         />
-        <p className="font-bold text-green-950">Setup Complete!</p>
-        <p>You're all set to start calculating freight rates.</p>
-        <p>Use the calculator below to get accurate rates for your loads.</p>
-      </div>
+        <p className="font-bold text-green-950 text-xl mt-4">Setup Complete!</p>
+        <p className="text-neutral-700 text-center mt-2">You're all set to start calculating freight rates.</p>
+        <p className="text-neutral-600 text-center text-sm">Use the calculator below to get accurate rates for your loads.</p>
+      </Card>
 
-      <div className="shadow-md mt-6">
-        <div className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 p-2">
-          <div className="flex justify-between">
+      <Card padding="none" className="mt-6 overflow-hidden">
+        <div className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 p-4">
+          <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <GoTrophy size={20} className="text-white" />
               <p className="text-white font-bold">Your Trucking Journey</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <BsLightningCharge className="text-white" />
               <p className="text-white">Level 1</p>
             </div>
           </div>
-          <div className="flex justify-between items-center">
-            <p className="text-white text-sm mt-3 ">Progress to Level 2</p>
-            <p className="text-white text-sm">0%</p>
+          <div className="mt-3">
+            <ProgressBar
+              value={0}
+              max={100}
+              showLabel
+              label="Progress to Level 2"
+              size="sm"
+              className="[&_.text-blue-600]:text-white [&_.text-neutral-700]:text-white [&_.bg-neutral-200]:bg-blue-900"
+            />
           </div>
-          <progress
-            value="0"
-            max="100"
-            className="w-full h-2 overflow-hidden [&::-webkit-progress-bar]:bg-blue-900
-                   [&::-webkit-progress-value]:bg-blue-800 [&::-moz-progress-bar]:bg-blue-500 [&::-webkit-progress-value]:rounded-full
-                   [&::-webkit-progress-bar]:rounded-full"
-          ></progress>
         </div>
         <div className="bg-white p-2">
           <div className="flex justify-between">
@@ -80,7 +66,7 @@ function Step5({ barvalue, setBarvalue, step, setStep }) {
               <MdKeyboardArrowRight className="text-blue-400" />
             </div>
           </div>
-          <div className="p-3 grid grid-cols-5 gap-3">
+          <div className="p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <Achievements text="New Trucker" Icon={CiStar} />
             <Achievements text="New Trucker" Icon={CiStar} />
             <Achievements text="New Trucker" Icon={CiStar} />
@@ -125,27 +111,28 @@ function Step5({ barvalue, setBarvalue, step, setStep }) {
                   <p className="text-[10px] text-indigo-600">Subscribe to earn exclusive badges and level up faster</p>
                 </div>
               </div>
-            <button className="bg-indigo-600 p-1 text-white rounded-md"> Upgrade </button>
+            <Button variant="primary" size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+              Upgrade
+            </Button>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-blue-100 mt-4">
-        <div className="flex justify-between items-center p-2">
-            <div className="flex gap-3 items-center">
-                <LuTruck size={40} className="p-3 rounded-full text-blue-500 bg-blue-200  "/>
-                <p className="font-medium">Truck Stop Preferences</p>
-            </div>
-            <FaArrowUp/>
+      <Card variant="flat" className="bg-blue-50 mt-4">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-3 items-center">
+            <LuTruck size={40} className="p-3 rounded-full text-blue-600 bg-blue-200" />
+            <p className="font-medium text-neutral-900">Truck Stop Preferences</p>
+          </div>
+          <FaArrowUp className="text-neutral-600" />
         </div>
+      </Card>
 
+      <div className="mt-6">
+        <Ratecalc setStep={setStep} />
       </div>
-
-      <Ratecalc/>
-
-
-    </div>
+    </Container>
   );
 }
 

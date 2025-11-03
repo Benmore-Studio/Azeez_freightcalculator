@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { FaTruck, FaTimes, FaInfoCircle, FaMapMarkerAlt, FaCalendar, FaClock, FaChevronRight } from "react-icons/fa";
+import { Input, Select, Button, Checkbox } from "@/components/ui";
 
 export default function BookingModal({ isOpen, onClose, handleViewBookingPolicies }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -94,31 +95,34 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg sm:rounded-xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FaTruck className="text-blue-600 text-2xl" />
-            <h2 className="text-2xl font-bold text-gray-900">Book This Load</h2>
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 md:p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <FaTruck className="text-blue-600 text-lg sm:text-xl md:text-2xl" />
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Book This Load</h2>
           </div>
-          <button
+          <Button
             onClick={onClose}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            variant="ghost"
+            size="sm"
+            icon={<FaTimes />}
+            iconPosition="left"
+            className="text-gray-600"
           >
-            <FaTimes />
-            Close
-          </button>
+            <span className="hidden sm:inline">Close</span>
+          </Button>
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 py-6 border-b border-gray-200">
+        <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-6 border-b border-gray-200">
           <div className="flex items-center justify-between max-w-2xl mx-auto">
             {steps.map((step, index) => (
               <React.Fragment key={step.number}>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold ${
+                    className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-sm sm:text-base md:text-lg font-semibold ${
                       currentStep === step.number
                         ? "bg-blue-600 text-white"
                         : currentStep > step.number
@@ -129,7 +133,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                     {step.number}
                   </div>
                   <span
-                    className={`text-lg font-semibold ${
+                    className={`text-xs sm:text-sm md:text-base lg:text-lg font-semibold ${
                       currentStep === step.number
                         ? "text-blue-600"
                         : currentStep > step.number
@@ -142,7 +146,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                 </div>
                 {index < steps.length - 1 && (
                   <div
-                    className={`flex-1 h-1 mx-4 ${
+                    className={`flex-1 h-1 mx-1 sm:mx-2 md:mx-4 ${
                       currentStep > step.number ? "bg-green-500" : "bg-gray-200"
                     }`}
                   />
@@ -153,19 +157,19 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
         </div>
 
         {/* Step Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-4 md:p-6">
           {currentStep === 1 && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Info Banner */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-                <FaInfoCircle className="text-blue-600 text-xl mt-0.5 flex-shrink-0" />
-                <p className="text-blue-900">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+                <FaInfoCircle className="text-blue-600 text-base sm:text-lg md:text-xl mt-0.5 flex-shrink-0" />
+                <p className="text-sm sm:text-base text-blue-900">
                   Schedule your pickup and delivery times for this load from to .
                 </p>
               </div>
 
               {/* Pickup and Delivery Forms */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Pickup Information */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-4">
@@ -602,39 +606,44 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
         </div>
 
         {/* Modal Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <FaInfoCircle />
-              <span>Bookings are confirmed within 1 business hour</span>
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500">
+              <FaInfoCircle className="flex-shrink-0" />
+              <span className="hidden sm:inline">Bookings are confirmed within 1 business hour</span>
+              <span className="sm:hidden">Confirmed within 1 hour</span>
               <button
                 onClick={handleViewBookingPolicies}
-                className="text-blue-600 hover:text-blue-700 font-medium ml-2"
+                className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                View booking policies
+                View policies
               </button>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {currentStep > 1 && (
-                <button
+                <Button
                   onClick={handleBack}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  variant="secondary"
+                  size="lg"
+                  className="flex-1 sm:flex-none"
                 >
                   Back
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 onClick={handleContinue}
                 disabled={currentStep === 3 && !formData.acceptTerms}
-                className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+                size="lg"
+                icon={<FaChevronRight />}
+                iconPosition="right"
+                className="flex-1 sm:flex-none"
               >
                 {currentStep === 1
-                  ? "Continue to Payment"
+                  ? "Continue"
                   : currentStep === 2
-                  ? "Review Booking"
-                  : "Confirm Booking"}
-                <FaChevronRight />
-              </button>
+                  ? "Review"
+                  : "Confirm"}
+              </Button>
             </div>
           </div>
         </div>

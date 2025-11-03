@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FaCheckCircle, FaShareAlt } from "react-icons/fa";
+import { Button } from "@/components/ui";
 import RateCards from "./RateCards";
 import BreakdownSection from "./BreakdownSection";
 import RouteAnalysis from "./RouteAnalysis";
@@ -137,20 +138,23 @@ export default function Quote({ quoteData }) {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 space-y-8">
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-4 sm:pb-6">
         <div className="flex items-center gap-3">
-          <FaCheckCircle className="text-green-500 text-3xl" />
-          <h1 className="text-3xl font-bold text-gray-900">Rate Calculation Complete</h1>
+          <FaCheckCircle className="text-green-500 text-2xl sm:text-3xl" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Rate Calculation Complete</h1>
         </div>
-        <button
+        <Button
           onClick={handleShareQuote}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors font-medium"
+          variant="outline"
+          size="md"
+          icon={<FaShareAlt />}
+          iconPosition="left"
+          className="w-full sm:w-auto"
         >
-          <FaShareAlt />
           Share Quote
-        </button>
+        </Button>
       </div>
 
       {/* Rate Cards */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { TiWeatherCloudy } from "react-icons/ti";
 import { IoSearchOutline } from "react-icons/io5";
+import { Input, Select, Button } from "@/components/ui";
 
 function RateCalcConditions({ setStage, onComplete }) {
   const [weatherCondition, setWeatherCondition] = useState("Normal");
@@ -24,91 +25,81 @@ function RateCalcConditions({ setStage, onComplete }) {
   };
 
   return (
-    <div className='p-4 bg-white'>
-      <div className='flex gap-3 items-center'>
+    <div className='p-4 sm:p-6 bg-white'>
+      <div className='flex gap-3 items-center mb-4'>
         <TiWeatherCloudy className='text-blue-600' size={25}/>
-        <p className='text-lg text-gray-700 font-semibold'>Conditions & Equipment</p>
+        <p className='text-xl font-semibold text-neutral-900'>Conditions & Equipment</p>
       </div>
 
-      <div className='grid grid-cols-2 gap-4 mt-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-6'>
         {/* Weather Conditions */}
-        <div className='flex flex-col gap-2'>
-          <label className='text-gray-800 font-semibold'>Weather Conditions</label>
-          <select
-            value={weatherCondition}
-            onChange={(e) => setWeatherCondition(e.target.value)}
-            className='w-full border-1 border-gray-400 p-3 rounded-md focus:outline-none focus:border-2 focus:border-blue-600 h-[50px] text-gray-700'
-          >
-            <option value="Normal">Normal</option>
-            <option value="Light Rain">Light Rain</option>
-            <option value="Heavy Rain">Heavy Rain</option>
-            <option value="Snow">Snow</option>
-            <option value="Extreme Weather">Extreme Weather</option>
-          </select>
-        </div>
+        <Select
+          label="Weather Conditions"
+          value={weatherCondition}
+          onChange={(e) => setWeatherCondition(e.target.value)}
+          options={[
+            { value: "Normal", label: "Normal" },
+            { value: "Light Rain", label: "Light Rain" },
+            { value: "Heavy Rain", label: "Heavy Rain" },
+            { value: "Snow", label: "Snow" },
+            { value: "Extreme Weather", label: "Extreme Weather" },
+          ]}
+        />
 
         {/* Season */}
-        <div className='flex flex-col gap-2'>
-          <label className='text-gray-800 font-semibold'>Season</label>
-          <select
-            value={season}
-            onChange={(e) => setSeason(e.target.value)}
-            className='w-full border-1 border-gray-400 p-3 rounded-md focus:outline-none focus:border-2 focus:border-blue-600 h-[50px] text-gray-700'
-          >
-            <option value="Spring">Spring</option>
-            <option value="Summer">Summer</option>
-            <option value="Fall">Fall</option>
-            <option value="Winter">Winter</option>
-          </select>
-        </div>
+        <Select
+          label="Season"
+          value={season}
+          onChange={(e) => setSeason(e.target.value)}
+          options={[
+            { value: "Spring", label: "Spring" },
+            { value: "Summer", label: "Summer" },
+            { value: "Fall", label: "Fall" },
+            { value: "Winter", label: "Winter" },
+          ]}
+        />
 
         {/* Fuel Price */}
-        <div className='flex flex-col'>
-          <label className='text-gray-800 font-semibold flex items-center gap-1 mb-2'>
-            <span className='text-xl'>$</span>
-            <span>Fuel Price ($/gallon)</span>
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            value={fuelPrice}
-            onChange={(e) => setFuelPrice(e.target.value)}
-            className='w-full border-1 border-gray-400 p-3 rounded-md focus:outline-none focus:border-2 focus:border-blue-600 h-[50px]'
-          />
-          <p className='text-blue-600 text-sm mt-1'>Auto-calculated based on current route prices</p>
-        </div>
+        <Input
+          label="Fuel Price ($/gallon)"
+          type="number"
+          step="0.01"
+          value={fuelPrice}
+          onChange={(e) => setFuelPrice(e.target.value)}
+          helperText="Auto-calculated based on current route prices"
+        />
 
         {/* Destination Market */}
-        <div className='flex flex-col'>
-          <label className='text-gray-800 font-semibold mb-2'>Destination Market</label>
-          <select
-            value={destinationMarket}
-            onChange={(e) => setDestinationMarket(e.target.value)}
-            className='w-full border-1 border-gray-400 p-3 rounded-md focus:outline-none focus:border-2 focus:border-blue-600 h-[50px] text-gray-700'
-          >
-            <option value="Hot Market">Hot Market</option>
-            <option value="Neutral">Neutral</option>
-            <option value="Slow Market">Slow Market</option>
-          </select>
-          <p className='text-blue-600 text-sm mt-1'>Market rating is auto-detected based on destination</p>
-        </div>
+        <Select
+          label="Destination Market"
+          value={destinationMarket}
+          onChange={(e) => setDestinationMarket(e.target.value)}
+          options={[
+            { value: "Hot Market", label: "Hot Market" },
+            { value: "Neutral", label: "Neutral" },
+            { value: "Slow Market", label: "Slow Market" },
+          ]}
+          helperText="Market rating is auto-detected based on destination"
+        />
       </div>
 
       {/* Navigation Buttons */}
-      <div className='flex justify-between mt-6'>
-        <button
-          onClick={() => { setStage("Service") }}
-          className='border-1 border-gray-400 px-5 py-2 rounded-md text-gray-600 hover:bg-gray-50'
+      <div className='flex flex-col sm:flex-row justify-between gap-3 mt-6'>
+        <Button
+          onClick={() => setStage("Service")}
+          variant="secondary"
+          size="lg"
         >
           Previous
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleCalculateRate}
-          className='bg-blue-600 px-6 py-2 rounded-md text-white flex items-center gap-2 hover:bg-blue-700'
+          size="lg"
+          icon={<IoSearchOutline size={20}/>}
+          iconPosition="left"
         >
-          <IoSearchOutline size={20}/>
-          <span>Calculate Rate</span>
-        </button>
+          Calculate Rate
+        </Button>
       </div>
     </div>
   )
