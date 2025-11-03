@@ -284,7 +284,7 @@ function Step4({ barvalue, setBarvalue, step, setStep }) {
               iconPosition="left"
               className="flex-1"
             >
-              Add This Vehicle
+              Save & Add Another Vehicle
             </Button>
 
             <Button
@@ -297,7 +297,7 @@ function Step4({ barvalue, setBarvalue, step, setStep }) {
               iconPosition="left"
               className="flex-1 bg-green-600 hover:bg-green-700 focus:ring-green-500"
             >
-              Add & Continue
+              Save & Continue to Dashboard
             </Button>
           </div>
         </div>

@@ -8,13 +8,23 @@ function Ratestepicon({Icon,text,currentStage}) {
     const currentStageIndex = stageOrder.indexOf(currentStage)
     const thisStageIndex = stageOrder.indexOf(text)
 
-    // This stage is active (blue) if we've reached it or passed it
-    const isActive = thisStageIndex <= currentStageIndex
+    // Determine the state: current, completed, or future
+    const isCurrent = thisStageIndex === currentStageIndex
+    const isCompleted = thisStageIndex < currentStageIndex
+    const isFuture = thisStageIndex > currentStageIndex
 
   return (
     <div className='flex flex-col items-center'>
-        <Icon size={40} className={` p-2 rounded-full transition-all duration-300 ${isActive ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"   }`}/>
-        <p className={`text-sm font-medium transition-all duration-300 ${isActive ? "text-blue-600" : "text-gray-400"}`}>{text}</p>
+        <Icon size={40} className={`p-2 rounded-full transition-all duration-300 ${
+          isCurrent ? "bg-blue-600 text-white ring-4 ring-blue-200" :
+          isCompleted ? "bg-blue-100 text-blue-600" :
+          "bg-gray-100 text-gray-400"
+        }`}/>
+        <p className={`text-sm font-medium transition-all duration-300 ${
+          isCurrent ? "text-blue-800 font-bold" :
+          isCompleted ? "text-blue-600" :
+          "text-gray-400"
+        }`}>{text}</p>
     </div>
   )
 }
