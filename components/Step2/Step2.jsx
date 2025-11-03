@@ -1,14 +1,11 @@
 "use client";
 import React from "react";
-import { SiTicktick } from "react-icons/si";
 import { useState } from "react";
-import UserButton from "../Step1/UserButton";
-import { FaArrowRightLong } from "react-icons/fa6";
 import { CgProfile } from "react-icons/cg";
-import Step2formcomponent from "./Step2formcomponent";
+import { IoMailOutline, IoCallOutline, IoBusinessOutline } from "react-icons/io5";
 import Step2button from "./Step2button";
-import { FaArrowLeftLong } from "react-icons/fa6";
 import { useAppContext } from "@/context/AppContext";
+import { Container, Card, ProgressHeader, BackButton, Input, Button } from "@/components/ui";
 
 function Step2({ barvalue, setBarvalue, step, setStep }) {
   const [type, setType] = useState(null);
@@ -21,119 +18,90 @@ function Step2({ barvalue, setBarvalue, step, setStep }) {
   }
 
   return (
-    <div className="mx-auto w-[50%]">
-      <div className="shadow-sm rounded-2xl p-4 mt-4 bg-white">
-        <div className="w-full h-5 flex justify-between ">
-          <div className="flex items-center gap-2">
-            <SiTicktick className="text-blue-600" />
-            <p className="font-bold">Select your vehicle</p>
-          </div>
-          <p className="text-blue-600 font-bold">40% Setup Complete</p>
-        </div>
+    <Container>
+      <ProgressHeader
+        title="Let's get you set up"
+        percentage={Number(barvalue)}
+        className="mt-4"
+      />
 
-        <progress
-          value={barvalue}
-          max="100"
-          className="w-full h-2  mt-3 overflow-hidden [&::-webkit-progress-bar]:bg-gray-300
-           [&::-webkit-progress-value]:bg-blue-800 [&::-moz-progress-bar]:bg-blue-500 [&::-webkit-progress-value]:rounded-full
-           [&::-webkit-progress-bar]:rounded-full"
-        ></progress>
-      </div>
-
-      <div
-        className="mt-6 flex gap-2 items-center"
+      <BackButton
         onClick={() => {
           setStep(1);
           setBarvalue("20");
         }}
-      >
-        <FaArrowLeftLong className="text-blue-800" />
-        <p className="text-blue-800">Back to previous Step</p>
-      </div>
+        className="mt-6"
+      />
 
-      <div className="shadow-md rounded-2xl p-4 mt-6 bg-white">
-        <h2 className="w-fit text-3xl text-blue-800 mx-auto font-bold">
+      <Card className="mt-6">
+        <h2 className="text-center text-2xl md:text-3xl font-bold text-neutral-900">
           Welcome to FreightRate Pro
         </h2>
-        <h3 className="w-fit mx-auto text-1xl text-gray-800 mt-2">
+        <h3 className="text-center text-base text-neutral-600 mt-2">
           Let's get started by creating your profile
         </h3>
 
-        <form className="mt-2 flex flex-col gap-4" action="">
-          <Step2formcomponent
-            Icon={CgProfile}
+        <form className="mt-6 space-y-4">
+          <Input
             label="Your Name"
-            placeholder="John Smith"
+            type="text"
             name="name"
             value={formdata.name}
             onChange={handleChange}
+            icon={<CgProfile />}
+            placeholder="John Smith"
+            required
           />
-          <Step2formcomponent
-            Icon={CgProfile}
-            label="Email Address"
-            placeholder="john@example.com"
-            name="email"
-            value={formdata.email}
-            onChange={handleChange}
-          />
-          <Step2formcomponent
-            Icon={CgProfile}
-            label="Phone Number"
-            placeholder="(555) 123-4567"
-            name="phone"
-            value={formdata.phone}
-            onChange={handleChange}
-          />
-          <Step2formcomponent
-            Icon={CgProfile}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Email Address"
+              type="email"
+              name="email"
+              value={formdata.email}
+              onChange={handleChange}
+              icon={<IoMailOutline />}
+              placeholder="john@example.com"
+              required
+            />
+
+            <Input
+              label="Phone Number"
+              type="tel"
+              name="phone"
+              value={formdata.phone}
+              onChange={handleChange}
+              icon={<IoCallOutline />}
+              placeholder="(555) 123-4567"
+              required
+            />
+          </div>
+
+          <Input
             label="Company Name"
-            placeholder="ABC Trucking"
+            type="text"
             name="company"
             value={formdata.company}
             onChange={handleChange}
+            icon={<IoBusinessOutline />}
+            placeholder="ABC Trucking"
+            helperText="Optional - Leave blank if individual"
           />
-          <div>
-            <p>I am a:</p>
-            <div className="grid grid-cols-3 gap-2">
-              <Step2button
-                onSelect={() => setType("Driver")}
-                text="Driver"
-                type={type}
-                setType={setType}
-                setFormData={setFormdata}
-              />
-              <Step2button
-                onSelect={() => setType("Dispatcher")}
-                text="Dispatcher"
-                type={type}
-                setType={setType}
-                setFormData={setFormdata}
-
-              />
-              <Step2button
-                onSelect={() => setType("Carrier")}
-                text="Carrier"
-                type={type}
-                setFormData={setFormdata}
-
-              />
-            </div>
-          </div>
         </form>
 
-        <div
+        <Button
           onClick={() => {
             setStep(3);
             setBarvalue("70");
           }}
-          className="w-full bg-blue-800 mt-6 rounded-sm"
+          fullWidth
+          size="lg"
+          className="mt-8"
         >
-          <p className="w-fit mx-auto text-white py-2 ">
-            Continue to cost calculator
-          </p>
-        </div>
-      </div>
-    </div>
+          Continue
+        </Button>
+      </Card>
+    </Container>
   );
 }
 

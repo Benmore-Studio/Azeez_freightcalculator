@@ -1,10 +1,9 @@
 import React from "react";
-import { SiTicktick } from "react-icons/si";
-import { FaArrowLeftLong } from "react-icons/fa6";
 import Step3radiobutton from "./Step3radiobutton";
 import Step3fixedcosts from "./Step3fixedcosts";
 import Step3variablecosts from "./Step3variablecosts";
 import { useAppContext } from "@/context/AppContext";
+import { Container, Card, ProgressHeader, BackButton, Select, Input, Button, Radio } from "@/components/ui";
 
 function Step3({ barvalue, setBarvalue, step, setStep }) {
   // ============================================
@@ -16,52 +15,27 @@ function Step3({ barvalue, setBarvalue, step, setStep }) {
 
 
   return (
-    <div className="mx-auto w-[50%] ">
-      {/* ============================================ */}
-      {/* PROGRESS HEADER */}
-      {/* ============================================ */}
-      <div className="shadow-sm rounded-2xl p-4 mt-4 bg-white">
-        <div className="w-full h-5 flex justify-between ">
-          <div className="flex items-center gap-2">
-            <SiTicktick className="text-blue-600" />
-            <p className="font-bold">Let's get you set up</p>
-          </div>
-          <p className="text-blue-600 font-bold">70% Setup Complete</p>
-        </div>
+    <Container>
+      <ProgressHeader
+        title="Let's get you set up"
+        percentage={Number(barvalue)}
+        className="mt-4"
+      />
 
-        <progress
-          value={barvalue}
-          max="100"
-          className="w-full h-2  mt-3 overflow-hidden [&::-webkit-progress-bar]:bg-gray-300
-               [&::-webkit-progress-value]:bg-blue-800 [&::-moz-progress-bar]:bg-blue-500 [&::-webkit-progress-value]:rounded-full
-               [&::-webkit-progress-bar]:rounded-full"
-        ></progress>
-      </div>
-
-      {/* ============================================ */}
-      {/* BACK NAVIGATION */}
-      {/* ============================================ */}
-      <div
-        className="mt-6 flex gap-2 items-center"
+      <BackButton
         onClick={() => {
           setStep(step - 1);
           setBarvalue("40");
         }}
-      >
-        <FaArrowLeftLong className="text-blue-800" />
-        <p className="text-blue-800">Back to previous Step</p>
-      </div>
+        className="mt-6"
+      />
 
-      {/* ============================================ */}
-      {/* COST DATA SOURCE & VEHICLE SELECTION */}
-      {/* ============================================ */}
-      <div className="shadow-md rounded-2xl p-4 mt-6 bg-white">
-        <h2 className="w-fit text-3xl text-blue-800  font-bold">
+      <Card className="mt-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-neutral-900">
           Calculate Your Cost Per Mile
         </h2>
-        <h3 className="w-fit  text-sm text-gray-500 mt-2">
-          Understanding your true operating costs is essential for profitable
-          rate setting
+        <h3 className="text-sm text-neutral-600 mt-2">
+          Understanding your true operating costs is essential for profitable rate setting
         </h3>
 
         <div className="w-full bg-blue-200 rounded-md p-4">
@@ -98,56 +72,50 @@ function Step3({ barvalue, setBarvalue, step, setStep }) {
           </div>
 
           {/* Vehicle Type Dropdown */}
-          <label className="mt-4 font-medium" htmlFor="">
-            Vehicle Type
-          </label>
-          <select
-            className="bg-gray-100 w-full rounded-sm px-4 py-2 text-gray-700  "
-            onChange={(e) => setVehicle(e.target.value)}
-          >
-            <option value="Semitruck">Semi-Truck/Tractor Trailer</option>
-            <option value="sprintervan">Sprinter Van</option>
-            <option value="boxtruck">Straight/Box Truck</option>
-            <option value="cargovan">Cargo Van</option>
-          </select>
+          <div className="mt-4">
+            <Select
+              label="Vehicle Type"
+              value={vehicle}
+              onChange={(e) => setVehicle(e.target.value)}
+              options={[
+                { value: "Semitruck", label: "Semi-Truck/Tractor Trailer" },
+                { value: "sprintervan", label: "Sprinter Van" },
+                { value: "boxtruck", label: "Straight/Box Truck" },
+                { value: "cargovan", label: "Cargo Van" },
+              ]}
+            />
+          </div>
 
           {/* Maximum Payload Input */}
-          <label className="font-medium text-gray-700 mt-3">
-            Maximum Payload (lbs)
-          </label>
-          <input
-            className="w-full bg-gray-200 px-4 py-1 rounded-sm"
-            type="number"
-            onChange={(e) => {
-              setCostdata((prev) => ({
-                ...prev,
-                customPayloads: {
-                  ...prev.customPayloads,
-                  [vehicle]: e.target.value
-                }
-              }))
-            }}
-            value={costdata.radio === "default" ? costdata.defaultPayloads[vehicle] : costdata.customPayloads[vehicle]}
-            disabled={costdata.radio === "default"}
-          />
-          <p className="text-blue-800 text-[10px] mt-2">
-            Maximum weight your vehicle can legally transport
-          </p>
+          <div className="mt-3">
+            <Input
+              label="Maximum Payload (lbs)"
+              type="number"
+              value={costdata.radio === "default" ? costdata.defaultPayloads[vehicle] : costdata.customPayloads[vehicle]}
+              onChange={(e) => {
+                setCostdata((prev) => ({
+                  ...prev,
+                  customPayloads: {
+                    ...prev.customPayloads,
+                    [vehicle]: e.target.value
+                  }
+                }))
+              }}
+              disabled={costdata.radio === "default"}
+              helperText="Maximum weight your vehicle can legally transport"
+            />
+          </div>
         </div>
-      </div>
+      </Card>
 
-      {/* ============================================ */}
-      {/* FIXED & VARIABLE COSTS COMPONENTS */}
-      {/* ============================================ */}
-      <div className="w-full p-4 shadow-sm grid grid-cols-2 bg-white rounded-sm mt-4 gap-4 ">
-        <Step3fixedcosts radio={costdata.radio} />
-        <Step3variablecosts radio={costdata.radio} />
-      </div>
+      <Card variant="flat" className="mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Step3fixedcosts radio={costdata.radio} />
+          <Step3variablecosts radio={costdata.radio} />
+        </div>
+      </Card>
 
-      {/* ============================================ */}
-      {/* MILES DRIVEN & COST SUMMARY */}
-      {/* ============================================ */}
-      <div className="w-full p-4 shadow-sm bg-white">
+      <Card variant="flat" className="mt-4">
         {/* Miles Driven Input Section */}
         <div className="bg-gray-100 rounded-md p-2">
           <div >
@@ -213,24 +181,18 @@ function Step3({ barvalue, setBarvalue, step, setStep }) {
           </div>
 
           {/* Miles Input Field */}
-          <div className="flex gap-2 items-center mt-2">
-            <input
-              className="w-[80%] rounded-md border-1 border-gray-600 p-2"
+          <div className="mt-2">
+            <Input
               type="number"
-              name=""
-              id=""
               value={costdata.milesdriven}
               onChange={(e) => {
                 setCostdata((prev) => ({
                   ...prev,milesdriven:e.target.value
                 }));
               }}
+              helperText="Approximately 120,000 miles annually"
             />
-            <label className="w-[20%] font-bold" htmlFor="">
-              miles/month
-            </label>
           </div>
-          <p className="text-[10px]">Approximately 120,000 miles annually</p>
         </div>
 
         {/* Cost Per Mile Summary Display */}
@@ -247,19 +209,27 @@ function Step3({ barvalue, setBarvalue, step, setStep }) {
                     <p className="font-semibold">$0.33/mile </p>
                 </div>
                 <div className="flex flex-col">
-                    <p className="text-gray-800">Fixed Costs</p>
+                    <p className="text-gray-800">Variable Costs</p>
                     <p className="font-semibold">$0.33/mile </p>
                 </div>
             </div>
             <p className="text-sm text-gray-800 mt-4">This is your minimum cost to operate. For profitability, your rates should exceed this amount.</p>
         </div>
 
-        {/* ============================================ */}
-        {/* CONTINUE BUTTON */}
-        {/* ============================================ */}
-        <button onClick={(e) => {e.preventDefault(); setBarvalue("90"); setStep(4); }} className="w-full bg-blue-800 p-3 rounded-md mt-6 text-white font-bold">Continue to Vehicle Information</button>
-      </div>
-    </div>
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            setBarvalue("90");
+            setStep(4);
+          }}
+          fullWidth
+          size="lg"
+          className="mt-6"
+        >
+          Continue
+        </Button>
+      </Card>
+    </Container>
   );
 }
 
