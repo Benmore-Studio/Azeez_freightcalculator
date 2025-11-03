@@ -1,50 +1,66 @@
 import React from "react";
 import { IoLocationOutline } from "react-icons/io5";
-import Ratecalclocationinput from "./Ratecalclocationinput";
-import Ratecalclocationcheckbox from "./Ratecalclocationcheckbox";
-import { FaCube, FaRightLong } from "react-icons/fa6";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { TbLocation } from "react-icons/tb";
 import { TbCube } from "react-icons/tb";
 import { MdCallSplit } from "react-icons/md";
 import { useState } from "react";
+import { Input, Select, Button, Checkbox } from "@/components/ui";
 
 function Ratecalclocation({setStage}) {
   const [loadtype, setLoadtype] = useState(null);
   return (
-    <div className="p-4">
-      <div className="flex gap-3 items-center ">
-        <IoLocationOutline size={25} className="text-blue-500" />
-        <p className="text-[20px] font-semibold ">Location Details</p>
+    <div className="p-4 sm:p-6">
+      <div className="flex gap-3 items-center mb-4">
+        <IoLocationOutline size={25} className="text-blue-600" />
+        <p className="text-xl font-semibold text-neutral-900">Location Details</p>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Ratecalclocationinput label="Origin" />
-        <Ratecalclocationinput label="Destination" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="Origin"
+          type="text"
+          placeholder="Chicago, IL or 60601"
+          helperText="Enter city, state or ZIP code"
+          icon={<IoLocationOutline />}
+        />
+        <Input
+          label="Destination"
+          type="text"
+          placeholder="Los Angeles, CA or 90001"
+          helperText="Enter city, state or ZIP code"
+          icon={<IoLocationOutline />}
+        />
       </div>
-      <div className="grid grid-cols-3 gap-3 mt-8">
-        <Ratecalclocationcheckbox text="Airport Pickup" />
-        <Ratecalclocationcheckbox text="Airport Delivery" />
-        <Ratecalclocationcheckbox text="Requires TSA Clearance" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
+        <Checkbox label="Airport Pickup" />
+        <Checkbox label="Airport Delivery" />
+        <Checkbox label="Requires TSA Clearance" />
       </div>
-      <div className="grid grid-cols-2 mt-4 gap">
-        <div className="flex flex-col p-3">
-          <div className="flex gap-3 items-center">
-            <FaArrowRightLong className="text-gray-700" />
-            <p className="font-bold">Deadhead Miles To Pickup </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 mt-6 gap-4">
+        <div className="space-y-3">
+          <div className="flex gap-2 items-center">
+            <FaArrowRightLong className="text-neutral-600" />
+            <p className="font-semibold text-neutral-900">Deadhead Miles To Pickup</p>
           </div>
           <div className="flex gap-2">
-            <input
+            <Input
               type="number"
-              className="border-2 rounded-md h-fit px-3 text-md py-2"
+              placeholder="0"
+              className="flex-1"
             />
-            <button className="bg-blue-200 flex items-center rounded-md px-3 gap-1 hover:bg-blue-300 ">
-              <TbLocation size={18} className="text-blue-600 h-fit " />
-              <span className="text-[13px] text-blue-600">Use My Location</span>
-            </button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<TbLocation size={18} />}
+              iconPosition="left"
+              className="whitespace-nowrap"
+            >
+              Use Location
+            </Button>
           </div>
         </div>
-        <div className="p-3">
-          <p className="text-gray-700 font-bold">Load Type</p>
+        <div className="space-y-3">
+          <p className="font-semibold text-neutral-900">Load Type</p>
           <div className="grid grid-cols-2 gap-2">
             <div
               onClick={() => {
@@ -77,31 +93,33 @@ function Ratecalclocation({setStage}) {
       </div>
 
       {loadtype === "LTL (Partial)" && (
-        <label className="flex items-start gap-3 bg-blue-50 p-4 rounded-lg cursor-pointer mt-4">
-          <input
-            type="checkbox"
-            className="mt-1 h-5 w-5 accent-blue-600 cursor-pointer"
+        <div className="bg-blue-50 p-4 rounded-lg mt-4">
+          <Checkbox
+            label="Dedicated truck required for LTL pickup"
+            description="If checked, the truck will be dedicated to your load only, at a higher rate."
           />
-          <div>
-            <p className="font-semibold text-blue-800">
-              Dedicated truck required for LTL pickup
-            </p>
-            <p className="text-blue-600 text-sm">
-              If checked, the truck will be dedicated to your load only, at
-              a higher rate.
-            </p>
-          </div>
-        </label>
+        </div>
       )}
-      <div className="p-3 bg-green-100/60 mt-4 ">
-        <p className="text-green-900 font-bold">Select Equipment for this load</p>
-        <select name="" id="" className="w-full px-2 py-2 bg-white rounded-md border-1 border-green-300 mt-2">
-            <option value="">-</option>
-        </select>
-        <p className="text-[12px] text-green-300 mt-2">Selecting the right equipment helps calculate the most accurate rate</p>
+      <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg mt-6">
+        <Select
+          label="Select Equipment for this load"
+          placeholder="Choose equipment type"
+          options={[
+            { value: "dry-van", label: "Dry Van" },
+            { value: "refrigerated", label: "Refrigerated" },
+            { value: "flatbed", label: "Flatbed" },
+          ]}
+          helperText="Selecting the right equipment helps calculate the most accurate rate"
+        />
       </div>
-      <div className="flex mt-4">
-        <button onClick={ () => {setStage("Load Details") }} className="px-5 py-2 bg-blue-600 text-white rounded-md ml-auto">Next</button>
+
+      <div className="flex justify-end mt-6">
+        <Button
+          onClick={() => {setStage("Load Details")}}
+          size="lg"
+        >
+          Next: Load Details
+        </Button>
       </div>
     </div>
   );

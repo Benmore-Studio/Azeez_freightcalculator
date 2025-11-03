@@ -178,7 +178,7 @@ function Step4({ barvalue, setBarvalue, step, setStep }) {
             label="VIN (Optional)"
             type="text"
             placeholder="Vehicle Identification Number"
-            helperText="Enter VIN to auto-fill vehicle specifications"
+            helperText="VIN for your records (optional)"
           />
         </div>
 
