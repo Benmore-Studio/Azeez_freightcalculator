@@ -10,6 +10,13 @@ import MarketAnalysis from "./MarketAnalysis";
 import BrokerVerification from "./BrokerVerification";
 import BookingSection from "./BookingSection";
 import RateBreakdown from "./RateBreakdown";
+import LoadAcceptanceScore from "./LoadAcceptanceScore";
+import ProfitCalculator from "./ProfitCalculator";
+import WeatherAnalysis from "./WeatherAnalysis";
+import MarketIntelligence from "./MarketIntelligence";
+import { getWeatherForRoute } from "@/lib/mockData/weather";
+import { getMarketIntelligence } from "@/lib/mockData/marketIntelligence";
+import { calculateLoadAcceptanceScore } from "@/lib/mockData/loadAcceptanceScore";
 
 export default function Quote({ quoteData }) {
   // Default data structure if no data is passed
@@ -71,6 +78,49 @@ export default function Quote({ quoteData }) {
       confirmationTime: "1 business hour",
     },
   };
+
+  // Generate mock data for new components
+  // In production, these would come from the calculator results
+  const mockOrigin = quoteData?.origin || "Chicago, IL";
+  const mockDestination = quoteData?.destination || "Los Angeles, CA";
+  const mockRate = data.recommendedRate.total || 3500;
+  const mockTotalCosts = 2450;
+  const mockDeadheadMiles = quoteData?.deadheadMiles || 25;
+  const mockTotalMiles = data.recommendedRate.miles || 2015;
+
+  // Generate weather data
+  const weatherData = getWeatherForRoute(mockOrigin, mockDestination);
+
+  // Generate market intelligence data
+  const marketIntelData = getMarketIntelligence(mockOrigin, mockDestination);
+
+  // Generate profit data
+  const profitData = {
+    revenue: mockRate,
+    totalCosts: mockTotalCosts,
+    netProfit: mockRate - mockTotalCosts,
+    profitMargin: ((mockRate - mockTotalCosts) / mockRate) * 100,
+    costBreakdown: {
+      fuelCost: 890.50,
+      driverPay: 750.00,
+      maintenance: 220.00,
+      insurance: 185.00,
+      tollsAndFees: 145.00,
+      deadheadCost: 125.50,
+      other: 134.00
+    }
+  };
+
+  // Calculate load acceptance score
+  const loadScoreData = calculateLoadAcceptanceScore({
+    rate: mockRate,
+    totalCosts: mockTotalCosts,
+    profitMargin: profitData.profitMargin,
+    marketData: marketIntelData,
+    deadheadMiles: mockDeadheadMiles,
+    totalMiles: mockTotalMiles,
+    weatherData: weatherData
+  });
 
   // Event Handlers
   const handleShareQuote = () => {
@@ -157,13 +207,25 @@ export default function Quote({ quoteData }) {
         </Button>
       </div>
 
+      {/* Load Acceptance Score - THE INSTANT DECISION */}
+      <LoadAcceptanceScore scoreData={loadScoreData} />
+
       {/* Rate Cards */}
       <RateCards data={data} formatCurrency={formatCurrency} />
+
+      {/* Profit Calculator - PROFITABILITY VISUALIZATION */}
+      <ProfitCalculator profitData={profitData} />
 
       {/* Breakdown Section */}
       <BreakdownSection data={data} formatCurrency={formatCurrency} />
 
-      {/* Route & Market Analysis */}
+      {/* Weather Analysis - ROUTE CONDITIONS & RISK */}
+      <WeatherAnalysis weatherData={weatherData} />
+
+      {/* Market Intelligence - COMPREHENSIVE MARKET ANALYSIS */}
+      <MarketIntelligence marketData={marketIntelData} />
+
+      {/* Route & Market Analysis (Legacy) */}
       <RouteAnalysis
         data={data}
         formatRatio={formatRatio}
@@ -171,7 +233,7 @@ export default function Quote({ quoteData }) {
         getRatioColor={getRatioColor}
       />
 
-      {/* Market Analysis & Next Money Lanes */}
+      {/* Market Analysis & Next Money Lanes (Legacy) */}
       <MarketAnalysis data={data} handleSelectLane={handleSelectLane} />
 
       {/* Broker Verification */}

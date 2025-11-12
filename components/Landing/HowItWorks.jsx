@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { FaRoute, FaTruckLoading, FaCalculator, FaCheckCircle } from "react-icons/fa";
 
 const steps = [
@@ -46,21 +47,17 @@ export default function HowItWorks() {
         {/* Steps */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
-            <div key={index} className="text-center relative">
-              {/* Step Number Circle */}
+            <div key={index} className="text-center">
+              {/* Icon Circle */}
               <div className="mb-6 relative inline-block">
-                <div className="w-20 h-20 rounded-full bg-blue-900 text-white flex items-center justify-center text-2xl font-bold mx-auto">
+                <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center mx-auto shadow-lg">
+                  <step.icon className="text-white" size={32} />
+                </div>
+                {/* Step Number Badge */}
+                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-blue-900 text-white flex items-center justify-center text-sm font-bold border-4 border-white">
                   {step.step}
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <step.icon className="text-white" size={24} />
-                </div>
               </div>
-
-              {/* Connector Line (hidden on last item and mobile) */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] h-0.5 bg-blue-200" />
-              )}
 
               {/* Step Content */}
               <h3 className="text-xl font-semibold text-neutral-900 mb-3">
@@ -75,12 +72,12 @@ export default function HowItWorks() {
 
         {/* CTA */}
         <div className="mt-16 text-center">
-          <a
+          <Link
             href="/calculator"
-            className="inline-block bg-blue-900 text-white font-semibold px-8 py-4 rounded-lg hover:bg-blue-800 transition-colors text-lg"
+            className="inline-block bg-blue-600 text-white font-semibold px-8 py-4 rounded-lg hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all text-lg"
           >
-            Try It Now - No Signup Required
-          </a>
+            Try It Now - No Signup Required →
+          </Link>
         </div>
       </div>
     </section>

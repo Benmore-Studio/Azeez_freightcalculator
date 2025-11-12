@@ -1,14 +1,17 @@
 "use client";
 import React from "react";
-import { Container } from "@/components/ui";
+import Navbar from "@/components/Navbar/Navbar";
+import SignInForm from "@/components/Auth/SignInForm";
 
 export default function SignInPage() {
   return (
-    <Container>
-      <div className="mt-6 max-w-md mx-auto">
-        <h1 className="text-2xl font-bold">Welcome Back</h1>
-        <p className="text-neutral-600 mt-2">Sign in to access your dashboard</p>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <SignInForm />
+        </div>
       </div>
-    </Container>
+    </>
   );
 }

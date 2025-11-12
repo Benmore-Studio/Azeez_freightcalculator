@@ -13,7 +13,7 @@ function Ratecalcloaddetails({setStage}) {
     setVehicle(e.target.value);
   }
   return (
-    <div className='p-4 sm:p-6 bg-white'>
+    <div className='p-4 bg-white'>
         <div className='flex gap-3 items-center mb-4'>
             <IoCubeOutline className='text-blue-600' size={25}/>
             <p className='text-xl font-semibold text-neutral-900'>Load Details</p>
@@ -38,8 +38,8 @@ function Ratecalcloaddetails({setStage}) {
               { value: "Hazardous Material", label: "Hazardous Material" },
               { value: "Tanker", label: "Tanker" },
             ]}
-          />   
-          {vehicle === "Refrigerated" && <Loaddetailsrefrigerator/>}       
+          />
+          {vehicle === "Refrigerated" && <Loaddetailsrefrigerator/>}
         </div>
         <div className='mt-4'>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -56,7 +56,7 @@ function Ratecalcloaddetails({setStage}) {
               />
             )}
           </div>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4'>
             <Checkbox label="Requires endorsement" />
             <Checkbox label="Military/Restricted Access" />
             <Checkbox label="Distribution Center" />
@@ -67,7 +67,7 @@ function Ratecalcloaddetails({setStage}) {
               />
             </div>
           </div>
-          <div className='flex flex-col sm:flex-row justify-between gap-3 mt-6'>
+          <div className='flex flex-col sm:flex-row justify-between gap-3 mt-4'>
             <Button
               onClick={() => {setStage("Location")}}
               variant="secondary"

@@ -2,11 +2,11 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
-import { FaCalculator, FaUserPlus } from "react-icons/fa";
+import { FaCalculator, FaCheckCircle } from "react-icons/fa";
 
 export default function Hero() {
   return (
-    <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white">
+    <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
         <div className="text-center">
           {/* Main Headline */}
@@ -26,19 +26,18 @@ export default function Hero() {
             <Link href="/calculator">
               <Button
                 size="lg"
-                className="bg-white text-blue-900 hover:bg-gray-100 hover:text-blue-950 font-semibold px-8 py-4 text-lg min-w-[200px] transition-all"
-                icon={<FaCalculator className="text-blue-900" />}
+                className="bg-blue-600 text-white hover:bg-blue-700 font-semibold px-8 py-4 text-lg min-w-[200px] shadow-lg hover:shadow-xl transition-all"
+                icon={<FaCalculator />}
                 iconPosition="left"
               >
-                Try Calculator
+                Try Calculator →
               </Button>
             </Link>
             <Link href="/auth/signup">
               <Button
                 size="lg"
-                className="bg-blue-700 border-2 border-blue-600 text-white hover:bg-blue-600 hover:border-blue-500 font-semibold px-8 py-4 text-lg min-w-[200px] transition-all"
-                icon={<FaUserPlus className="text-white" />}
-                iconPosition="left"
+                variant="outline"
+                className="border-2 border-white text-white hover:bg-white/10 font-semibold px-8 py-4 text-lg min-w-[200px] transition-all"
               >
                 Create Free Account
               </Button>
@@ -46,17 +45,23 @@ export default function Hero() {
           </div>
 
           {/* Social Proof */}
-          <p className="mt-8 text-sm text-blue-200">
-            ⚡ No signup required  •  💯 Industry-standard rates  •  🚀 Instant results
-          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-blue-200">
+            <span className="flex items-center gap-2">
+              <FaCheckCircle className="text-green-400" />
+              No signup required
+            </span>
+            <span className="hidden sm:inline text-blue-400">•</span>
+            <span className="flex items-center gap-2">
+              <FaCheckCircle className="text-green-400" />
+              Industry-standard rates
+            </span>
+            <span className="hidden sm:inline text-blue-400">•</span>
+            <span className="flex items-center gap-2">
+              <FaCheckCircle className="text-green-400" />
+              Instant results
+            </span>
+          </div>
         </div>
-      </div>
-
-      {/* Decorative wave at bottom */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-12 sm:h-16">
-          <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
-        </svg>
       </div>
     </section>
   );

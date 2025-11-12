@@ -31,7 +31,7 @@ function Ratecalcservice({ setStage }) {
   };
 
   return (
-    <div className='p-4 sm:p-6 bg-white'>
+    <div className='p-4 bg-white'>
       {/* Header */}
       <div className='flex gap-3 items-center mb-4'>
         <IoNewspaperOutline className='text-blue-600' size={25} />
@@ -68,7 +68,7 @@ function Ratecalcservice({ setStage }) {
       </div>
 
       {/* Delivery Urgency & Driver Type */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
         <Select
           label="Delivery Urgency"
           value={formData.deliveryUrgency}
@@ -92,7 +92,7 @@ function Ratecalcservice({ setStage }) {
       </div>
 
       {/* Service Level & Tracking Requirements */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
         <Select
           label="Service Level"
           value={formData.serviceLevel}
@@ -118,7 +118,7 @@ function Ratecalcservice({ setStage }) {
       </div>
 
       {/* Special Equipment Needed */}
-      <div className='mt-6'>
+      <div className='mt-4'>
         <p className='font-semibold text-neutral-900 mb-3'>Special Equipment Needed</p>
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'>
           {[
@@ -142,7 +142,7 @@ function Ratecalcservice({ setStage }) {
       </div>
 
       {/* Navigation Buttons */}
-      <div className='flex flex-col sm:flex-row justify-between gap-3 mt-6'>
+      <div className='flex flex-col sm:flex-row justify-between gap-3 mt-4'>
         <Button
           onClick={() => setStage('Load Details')}
           variant="secondary"

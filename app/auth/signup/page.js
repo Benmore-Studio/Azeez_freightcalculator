@@ -1,14 +1,17 @@
 "use client";
 import React from "react";
-import { Container } from "@/components/ui";
+import Navbar from "@/components/Navbar/Navbar";
+import SignUpForm from "@/components/Auth/SignUpForm";
 
 export default function SignUpPage() {
   return (
-    <Container>
-      <div className="mt-6 max-w-md mx-auto">
-        <h1 className="text-2xl font-bold">Create Your Account</h1>
-        <p className="text-neutral-600 mt-2">Sign up to save quotes and get accurate rates</p>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <SignUpForm />
+        </div>
       </div>
-    </Container>
+    </>
   );
 }

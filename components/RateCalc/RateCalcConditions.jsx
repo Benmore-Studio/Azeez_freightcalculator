@@ -25,13 +25,13 @@ function RateCalcConditions({ setStage, onComplete }) {
   };
 
   return (
-    <div className='p-4 sm:p-6 bg-white'>
+    <div className='p-4 bg-white'>
       <div className='flex gap-3 items-center mb-4'>
         <TiWeatherCloudy className='text-blue-600' size={25}/>
         <p className='text-xl font-semibold text-neutral-900'>Conditions & Equipment</p>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         {/* Weather Conditions */}
         <Select
           label="Weather Conditions"
@@ -84,7 +84,7 @@ function RateCalcConditions({ setStage, onComplete }) {
       </div>
 
       {/* Navigation Buttons */}
-      <div className='flex flex-col sm:flex-row justify-between gap-3 mt-6'>
+      <div className='flex flex-col sm:flex-row justify-between gap-3 mt-4'>
         <Button
           onClick={() => setStage("Service")}
           variant="secondary"

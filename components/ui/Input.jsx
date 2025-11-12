@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 export default function Input({
   label,
   type = "text",
@@ -14,7 +16,7 @@ export default function Input({
   className = "",
   ...props
 }) {
-  const inputId = `input-${Math.random().toString(36).substr(2, 9)}`;
+  const inputId = useId();
 
   return (
     <div className="w-full">
