@@ -72,7 +72,7 @@ export default function RateBreakdown({
             size="lg"
             icon={<FaSave />}
             iconPosition="left"
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Save Quote
           </Button>
@@ -82,6 +82,7 @@ export default function RateBreakdown({
             size="lg"
             icon={<FaChartBar />}
             iconPosition="left"
+            variant="secondary"
           >
             Compare Rates
           </Button>
@@ -91,7 +92,7 @@ export default function RateBreakdown({
             size="lg"
             icon={<FaChartLine />}
             iconPosition="left"
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            variant="secondary"
           >
             Market Analysis
           </Button>
@@ -101,7 +102,7 @@ export default function RateBreakdown({
             size="lg"
             icon={<FaCalendarAlt />}
             iconPosition="left"
-            className="bg-gray-600 hover:bg-gray-700 text-white"
+            variant="secondary"
           >
             Schedule Load
           </Button>
@@ -114,7 +115,8 @@ export default function RateBreakdown({
             size="lg"
             icon={<FaShareAlt />}
             iconPosition="left"
-            className="bg-teal-600 hover:bg-teal-700 text-white w-full sm:w-auto sm:min-w-[200px]"
+            variant="outline"
+            className="w-full sm:w-auto sm:min-w-[200px]"
           >
             Share Quote
           </Button>

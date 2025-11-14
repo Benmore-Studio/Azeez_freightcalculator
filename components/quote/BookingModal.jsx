@@ -126,7 +126,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                       currentStep === step.number
                         ? "bg-blue-600 text-white"
                         : currentStep > step.number
-                        ? "bg-green-500 text-white"
+                        ? "bg-blue-600 text-white"
                         : "bg-gray-200 text-gray-500"
                     }`}
                   >
@@ -137,7 +137,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                       currentStep === step.number
                         ? "text-blue-600"
                         : currentStep > step.number
-                        ? "text-green-600"
+                        ? "text-blue-600"
                         : "text-gray-400"
                     }`}
                   >
@@ -147,7 +147,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                 {index < steps.length - 1 && (
                   <div
                     className={`flex-1 h-1 mx-1 sm:mx-2 md:mx-4 ${
-                      currentStep > step.number ? "bg-green-500" : "bg-gray-200"
+                      currentStep > step.number ? "bg-blue-600" : "bg-gray-200"
                     }`}
                   />
                 )}

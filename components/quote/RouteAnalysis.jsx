@@ -53,8 +53,8 @@ export default function RouteAnalysis({ data, formatRatio, getMarketConditionCol
           </div>
 
           {/* Delivery Region */}
-          <div className="bg-purple-50 rounded-lg p-4 sm:p-6 space-y-3 sm:space-y-4">
-            <div className="flex items-center gap-2 text-purple-700 font-semibold">
+          <div className="bg-blue-50 rounded-lg p-4 sm:p-6 space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 text-blue-700 font-semibold">
               <FaMapMarkerAlt className="text-sm sm:text-base" />
               <h4 className="text-base sm:text-lg">Delivery Region: {data?.routeAnalysis?.delivery?.region}</h4>
             </div>
@@ -74,14 +74,14 @@ export default function RouteAnalysis({ data, formatRatio, getMarketConditionCol
                 </span>
               </div>
 
-              <div className="pt-2 border-t border-purple-200 space-y-1 sm:space-y-2">
+              <div className="pt-2 border-t border-blue-200 space-y-1 sm:space-y-2">
                 <p className="text-xs sm:text-sm text-gray-700">
                   <span className="font-semibold">Next Load Potential:</span>{" "}
                   {data?.routeAnalysis?.delivery?.nextLoadPotential}
                 </p>
                 <p className="text-xs sm:text-sm text-gray-700">
                   <span className="font-semibold">Available Loads:</span>{" "}
-                  <span className="text-purple-700 font-bold">{data?.routeAnalysis?.delivery?.availableLoads} loads</span>
+                  <span className="text-blue-700 font-bold">{data?.routeAnalysis?.delivery?.availableLoads} loads</span>
                 </p>
               </div>
             </div>
