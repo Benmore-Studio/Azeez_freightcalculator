@@ -148,10 +148,10 @@ export default function Step3CostCalc({ initialData, onNext, onPrevious, onSkip 
       </div>
 
       {/* Estimated Cost Display */}
-      <div className="bg-green-50 border-2 border-green-200 rounded-lg p-5">
+      <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
         <div className="flex justify-between items-center">
           <h4 className="font-semibold text-gray-900">Estimated Cost Per Mile:</h4>
-          <p className="text-2xl font-bold text-green-600">$1.75/mile</p>
+          <p className="text-2xl font-bold text-blue-600">$1.75/mile</p>
         </div>
         <p className="text-sm text-gray-600 mt-2">
           This is an estimate. You can update your exact costs from the dashboard later.

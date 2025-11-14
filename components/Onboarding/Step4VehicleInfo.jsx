@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Truck, Bus, Package, Car } from "lucide-react";
 import { Select, Input, Button } from "@/components/ui";
 
 export default function Step4VehicleInfo({ initialData, onNext, onPrevious, onSkip }) {
@@ -18,10 +19,10 @@ export default function Step4VehicleInfo({ initialData, onNext, onPrevious, onSk
   );
 
   const vehicleTypes = [
-    { value: "semitruck", label: "Semi Truck Tractor", icon: "🚛" },
-    { value: "sprintervan", label: "Sprinter Van", icon: "🚐" },
-    { value: "boxtruck", label: "Box Truck", icon: "📦" },
-    { value: "cargovan", label: "Cargo Van", icon: "🚙" },
+    { value: "semitruck", label: "Semi Truck Tractor", icon: Truck },
+    { value: "sprintervan", label: "Sprinter Van", icon: Bus },
+    { value: "boxtruck", label: "Box Truck", icon: Package },
+    { value: "cargovan", label: "Cargo Van", icon: Car },
   ];
 
   const makes = [
@@ -86,21 +87,30 @@ export default function Step4VehicleInfo({ initialData, onNext, onPrevious, onSk
           Vehicle Type
         </label>
         <div className="grid grid-cols-2 gap-3">
-          {vehicleTypes.map((type) => (
-            <button
-              key={type.value}
-              type="button"
-              onClick={() => handleInputChange("type", type.value)}
-              className={`flex items-center gap-3 p-4 border-2 rounded-lg transition-all ${
-                vehicleData.type === type.value
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 bg-white hover:border-gray-400"
-              }`}
-            >
-              <span className="text-2xl">{type.icon}</span>
-              <span className="font-medium text-sm">{type.label}</span>
-            </button>
-          ))}
+          {vehicleTypes.map((type) => {
+            const IconComponent = type.icon;
+            return (
+              <button
+                key={type.value}
+                type="button"
+                onClick={() => handleInputChange("type", type.value)}
+                className={`flex items-center gap-3 p-4 border-2 rounded-lg transition-all ${
+                  vehicleData.type === type.value
+                    ? "border-blue-600 bg-blue-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div className={`p-2 rounded-lg ${
+                  vehicleData.type === type.value ? "bg-blue-100" : "bg-gray-100"
+                }`}>
+                  <IconComponent className={`${
+                    vehicleData.type === type.value ? "text-blue-600" : "text-gray-600"
+                  }`} size={20} />
+                </div>
+                <span className="font-medium text-sm">{type.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

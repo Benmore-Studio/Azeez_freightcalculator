@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaTimes } from "react-icons/fa";
+import { X } from "lucide-react";
+import showToast from "@/lib/toast";
 import Step1UserType from "./Step1UserType";
 import Step2BasicInfo from "./Step2BasicInfo";
 import Step3CostCalc from "./Step3CostCalc";
@@ -56,7 +57,7 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
     console.log("Onboarding completed with data:", { ...onboardingData, ...data });
     // TODO: Save to backend in T7
     // TODO: Redirect to dashboard
-    alert("Onboarding complete! (Mock - will save to backend and redirect to dashboard)");
+    showToast.success("Onboarding complete! Redirecting to dashboard...");
     onClose();
   };
 
@@ -66,7 +67,7 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden">
         {/* Header with Progress */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6">
+        <div className="bg-blue-600 p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold text-white">Welcome! Let's Get Started</h2>
@@ -76,10 +77,10 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+              className="text-white hover:bg-blue-700 rounded-lg p-2 transition-colors"
               title="Save progress and exit"
             >
-              <FaTimes size={20} />
+              <X size={20} />
             </button>
           </div>
 

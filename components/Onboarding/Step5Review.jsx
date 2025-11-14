@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import { FaCheckCircle, FaUser, FaTruck, FaDollarSign } from "react-icons/fa";
+import { CheckCircle2, User, Truck, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui";
 
 export default function Step5Review({ data, onPrevious, onComplete }) {
   const getUserTypeLabel = (value) => {
     const types = {
-      "owner-operator": "Owner Operator 🚛",
-      "fleet-manager": "Fleet Manager 👔",
-      dispatcher: "Dispatcher 📋",
+      "owner-operator": "Owner Operator",
+      "fleet-manager": "Fleet Manager",
+      dispatcher: "Dispatcher",
     };
     return types[value] || value;
   };
@@ -22,8 +22,8 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
       {/* Success Header */}
       <div className="text-center">
         <div className="flex justify-center mb-4">
-          <div className="bg-green-100 p-4 rounded-full">
-            <FaCheckCircle className="text-green-600 text-5xl" />
+          <div className="bg-blue-100 p-4 rounded-full">
+            <CheckCircle2 className="text-blue-600" size={48} />
           </div>
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Almost Done!</h3>
@@ -35,9 +35,11 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
       {/* Profile Summary Cards */}
       <div className="space-y-4">
         {/* User Type & Basic Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
           <div className="flex items-center gap-3 mb-3">
-            <FaUser className="text-blue-600" />
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <User className="text-blue-600" size={20} />
+            </div>
             <h4 className="font-semibold text-gray-900">Profile Information</h4>
           </div>
           <div className="space-y-2 text-sm">
@@ -72,9 +74,11 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
 
         {/* Cost Data */}
         {hasCostData && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-5">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
             <div className="flex items-center gap-3 mb-3">
-              <FaDollarSign className="text-green-600" />
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <DollarSign className="text-blue-600" size={20} />
+              </div>
               <h4 className="font-semibold text-gray-900">Cost Information</h4>
             </div>
             <div className="space-y-2 text-sm">
@@ -99,11 +103,11 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
                     : "Custom Data"}
                 </span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-green-300">
+              <div className="flex justify-between pt-2 border-t border-blue-300">
                 <span className="text-gray-700 font-semibold">
                   Estimated Cost/Mile:
                 </span>
-                <span className="font-bold text-green-700 text-lg">$1.75</span>
+                <span className="font-bold text-blue-700 text-lg">$1.75</span>
               </div>
             </div>
           </div>
@@ -111,9 +115,11 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
 
         {/* Vehicle Data */}
         {hasVehicleData && (
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-5">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
             <div className="flex items-center gap-3 mb-3">
-              <FaTruck className="text-purple-600" />
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Truck className="text-blue-600" size={20} />
+              </div>
               <h4 className="font-semibold text-gray-900">Vehicle Information</h4>
             </div>
             <div className="space-y-2 text-sm">
@@ -171,8 +177,8 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
 
         {/* Skipped Sections Notice */}
         {!hasCostData && !hasVehicleData && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-5 text-center">
-            <p className="text-sm text-yellow-800">
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-5 text-center">
+            <p className="text-sm text-orange-800">
               You skipped cost and vehicle information. You can add these details
               from your dashboard at any time.
             </p>
@@ -181,23 +187,39 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
       </div>
 
       {/* Next Steps Preview */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-5">
+      <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-5">
         <h4 className="font-semibold text-gray-900 mb-3">What's Next?</h4>
         <ul className="space-y-2 text-sm text-gray-700">
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-0.5">✓</span>
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 mt-0.5">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
             <span>Access your personalized dashboard</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-0.5">✓</span>
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 mt-0.5">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
             <span>Calculate rates with your specific data</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-0.5">✓</span>
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 mt-0.5">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
             <span>Save quotes and track your vehicles</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-0.5">✓</span>
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 mt-0.5">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
             <span>Earn rewards and unlock features</span>
           </li>
         </ul>
