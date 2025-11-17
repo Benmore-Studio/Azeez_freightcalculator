@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { FaCalculator, FaTruck, FaFileAlt, FaCog } from "react-icons/fa";
-import { Button, Card } from "@/components/ui";
+import { FaCalculator, FaTruck, FaFileAlt } from "react-icons/fa";
+import { Card } from "@/components/ui";
 import Link from "next/link";
 
 export default function QuickActions() {
@@ -33,13 +33,13 @@ export default function QuickActions() {
 
   const getColorClasses = (color, isPrimary) => {
     if (isPrimary) {
-      return "bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg";
+      return "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg border-blue-600";
     }
 
     const colors = {
       blue: "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200",
-      green: "bg-green-50 text-green-700 hover:bg-green-100 border-green-200",
-      purple: "bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200",
+      green: "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200",
+      purple: "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200",
       gray: "bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200",
     };
     return colors[color] || colors.gray;

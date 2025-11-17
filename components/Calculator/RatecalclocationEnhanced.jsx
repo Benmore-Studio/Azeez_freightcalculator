@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 import { IoLocationOutline } from "react-icons/io5";
 import { FaArrowRightLong, FaTruck, FaRoute } from "react-icons/fa6";
-import { FaInfoCircle } from "react-icons/fa";
-import { TbLocation, TbCube } from "react-icons/tb";
+import { TbCube } from "react-icons/tb";
 import { MdCallSplit } from "react-icons/md";
 import { Input, Select, Button, Checkbox } from "@/components/ui";
 
@@ -69,6 +68,45 @@ export default function RatecalclocationEnhanced({ setStage, savedVehicles = [],
 
   return (
     <div className="p-4">
+      {/* Selected Vehicle Display - Prominent */}
+      {selectedVehicleData ? (
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <FaTruck className="text-blue-600 text-xl" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-gray-600 mb-1">Calculating Rates For:</h3>
+              <p className="text-lg font-bold text-gray-900 mb-2">
+                {selectedVehicleData.name} ({selectedVehicleData.year} {selectedVehicleData.make} {selectedVehicleData.model})
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-gray-600">MPG:</span>
+                  <span className="font-bold text-blue-700">{selectedVehicleData.mpg}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-gray-600">Equipment:</span>
+                  <span className="font-bold text-gray-900">{selectedVehicleData.equipment || "Not specified"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <FaTruck className="text-gray-400 text-xl" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-gray-500 mb-1">No Vehicle Selected</h3>
+              <p className="text-sm text-gray-600">Select a vehicle below to calculate rates with your specific vehicle data</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Vehicle & Trip Selectors - Two Column on Desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         {/* Saved Vehicle Selector */}
@@ -87,16 +125,6 @@ export default function RatecalclocationEnhanced({ setStage, savedVehicles = [],
               label: `${vehicle.name} - ${vehicle.year} ${vehicle.make} ${vehicle.model} (${vehicle.mpg} MPG)`,
             }))}
           />
-          {selectedVehicleData && (
-            <div className="mt-3 bg-blue-50 rounded-md p-3 border border-blue-300">
-              <div className="flex items-center gap-2 text-sm">
-                <FaInfoCircle className="text-blue-600" />
-                <span className="font-medium text-gray-900">
-                  Using: {selectedVehicleData.name} • {selectedVehicleData.mpg} MPG
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Saved Trip Selector */}
@@ -160,24 +188,12 @@ export default function RatecalclocationEnhanced({ setStage, savedVehicles = [],
             <FaArrowRightLong className="text-neutral-600" />
             <p className="font-semibold text-neutral-900">Deadhead Miles To Pickup</p>
           </div>
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="0"
-              value={formData.deadheadMiles}
-              onChange={(e) => handleInputChange("deadheadMiles", e.target.value)}
-              className="flex-1"
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<TbLocation size={18} />}
-              iconPosition="left"
-              className="whitespace-nowrap"
-            >
-              Use Location
-            </Button>
-          </div>
+          <Input
+            type="number"
+            placeholder="0"
+            value={formData.deadheadMiles}
+            onChange={(e) => handleInputChange("deadheadMiles", e.target.value)}
+          />
         </div>
 
         <div className="space-y-2">
