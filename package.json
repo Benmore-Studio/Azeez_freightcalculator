@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/client": "^7.0.1",
     "lucide-react": "^0.552.0",
     "next": "15.5.4",
+    "prisma": "^7.0.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4"

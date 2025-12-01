@@ -1,0 +1,577 @@
+// ============================================================================
+// FREIGHT CALCULATOR - Prisma Schema
+// ============================================================================
+// Version: 1.0.0
+// Description: Complete database schema for the freight rate calculator
+//              application supporting trucking industry professionals.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserType {
+  owner_operator
+  fleet_manager
+  dispatcher
+}
+
+enum VehicleType {
+  semi
+  box_truck
+  cargo_van
+  sprinter
+  reefer
+}
+
+enum EquipmentType {
+  dry_van
+  refrigerated
+  flatbed
+  step_deck
+  lowboy
+  tanker
+  conestoga
+  specialized
+}
+
+enum FuelType {
+  diesel
+  gasoline
+  cng
+  lng
+  electric
+  hybrid
+}
+
+enum WeatherCondition {
+  normal
+  light_rain
+  heavy_rain
+  snow
+  ice
+  extreme_weather
+  fog
+}
+
+enum MarketTemperature {
+  hot
+  warm
+  balanced
+  cool
+  cold
+}
+
+enum RateTrend {
+  rising
+  stable
+  falling
+}
+
+enum LoadType {
+  full_truckload
+  partial
+  ltl
+}
+
+enum FreightClass {
+  dry_van
+  refrigerated
+  flatbed
+  oversized
+  hazmat
+  tanker
+}
+
+enum QuoteStatus {
+  draft
+  calculated
+  booked
+  completed
+  cancelled
+  expired
+}
+
+enum FuelSource {
+  eia
+  opus
+  manual
+}
+
+// ============================================================================
+// CORE MODELS
+// ============================================================================
+
+/// Primary user accounts table for trucking professionals
+model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  passwordHash         String    @map("password_hash")
+  name                 String
+  phone                String?
+  companyName          String?   @map("company_name")
+  userType             UserType  @default(owner_operator) @map("user_type")
+
+  // Account status
+  isActive             Boolean   @default(true) @map("is_active")
+  isVerified           Boolean   @default(false) @map("is_verified")
+  emailVerifiedAt      DateTime? @map("email_verified_at")
+
+  // Onboarding tracking
+  onboardingCompleted  Boolean   @default(false) @map("onboarding_completed")
+  onboardingStep       Int       @default(1) @map("onboarding_step")
+
+  // Timestamps
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  lastLoginAt          DateTime? @map("last_login_at")
+
+  // Relations
+  vehicles             Vehicle[]
+  settings             UserSettings?
+  quotes               Quote[]
+  savedTrips           SavedTrip[]
+  bookingRecords       BookingRecord[]
+  rewards              UserReward[]
+  referralsMade        Referral[]      @relation("Referrer")
+  referredBy           Referral?       @relation("Referred")
+  apiUsage             ApiUsage[]
+
+  @@map("users")
+}
+
+/// User fleet vehicles used for rate calculations
+model Vehicle {
+  id                   String        @id @default(uuid())
+  userId               String        @map("user_id")
+
+  // Basic info
+  name                 String
+  vin                  String?
+  year                 Int?
+  make                 String?
+  model                String?
+
+  // Vehicle specifications
+  vehicleType          VehicleType   @map("vehicle_type")
+  equipmentType        EquipmentType @default(dry_van) @map("equipment_type")
+  fuelType             FuelType      @default(diesel) @map("fuel_type")
+  mpg                  Decimal?      @db.Decimal(4, 2)
+  axleCount            Int           @default(5) @map("axle_count")
+  hasSleeper           Boolean       @default(false) @map("has_sleeper")
+
+  // Additional specs
+  payloadCapacity      Int?          @map("payload_capacity")
+  grossVehicleWeight   Int?          @map("gross_vehicle_weight")
+
+  // Status
+  isActive             Boolean       @default(true) @map("is_active")
+  isPrimary            Boolean       @default(false) @map("is_primary")
+
+  // Timestamps
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quotes               Quote[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@index([vehicleType])
+  @@index([userId, isPrimary])
+  @@map("vehicles")
+}
+
+/// User operating costs and rate calculation settings
+model UserSettings {
+  id                       String   @id @default(uuid())
+  userId                   String   @unique @map("user_id")
+
+  // Fixed costs (annual/monthly)
+  annualInsurance          Decimal  @default(12000.00) @map("annual_insurance") @db.Decimal(10, 2)
+  monthlyVehiclePayment    Decimal  @default(1500.00) @map("monthly_vehicle_payment") @db.Decimal(10, 2)
+  annualMiles              Int      @default(100000) @map("annual_miles")
+  annualLicensing          Decimal  @default(2500.00) @map("annual_licensing") @db.Decimal(10, 2)
+  monthlyOverhead          Decimal  @default(500.00) @map("monthly_overhead") @db.Decimal(10, 2)
+
+  // Variable costs (per mile)
+  maintenanceCpm           Decimal  @default(0.15) @map("maintenance_cpm") @db.Decimal(6, 4)
+  fuelCpm                  Decimal? @map("fuel_cpm") @db.Decimal(6, 4)
+  tireCpm                  Decimal  @default(0.05) @map("tire_cpm") @db.Decimal(6, 4)
+
+  // Financial rates
+  factoringRate            Decimal  @default(0.03) @map("factoring_rate") @db.Decimal(5, 4)
+  profitMargin             Decimal  @default(0.15) @map("profit_margin") @db.Decimal(5, 4)
+
+  // Service multipliers
+  expediteMultiplier       Decimal  @default(1.30) @map("expedite_multiplier") @db.Decimal(4, 2)
+  teamMultiplier           Decimal  @default(1.50) @map("team_multiplier") @db.Decimal(4, 2)
+  rushMultiplier           Decimal  @default(1.50) @map("rush_multiplier") @db.Decimal(4, 2)
+  sameDayMultiplier        Decimal  @default(2.00) @map("same_day_multiplier") @db.Decimal(4, 2)
+
+  // Additional service fees
+  detentionRatePerHour     Decimal  @default(75.00) @map("detention_rate_per_hour") @db.Decimal(8, 2)
+  driverAssistFee          Decimal  @default(100.00) @map("driver_assist_fee") @db.Decimal(8, 2)
+  whiteGloveFee            Decimal  @default(250.00) @map("white_glove_fee") @db.Decimal(8, 2)
+  trackingFee              Decimal  @default(25.00) @map("tracking_fee") @db.Decimal(8, 2)
+  specialEquipmentFee      Decimal  @default(150.00) @map("special_equipment_fee") @db.Decimal(8, 2)
+  liftgateFee              Decimal  @default(75.00) @map("liftgate_fee") @db.Decimal(8, 2)
+  palletJackFee            Decimal  @default(50.00) @map("pallet_jack_fee") @db.Decimal(8, 2)
+
+  // Reefer-specific costs
+  defPricePerGallon        Decimal  @default(3.50) @map("def_price_per_gallon") @db.Decimal(6, 2)
+  reeferMaintenancePerHour Decimal  @default(25.00) @map("reefer_maintenance_per_hour") @db.Decimal(8, 2)
+  reeferFuelPerHour        Decimal  @default(1.50) @map("reefer_fuel_per_hour") @db.Decimal(6, 2)
+
+  // Preferences
+  useIndustryDefaults      Boolean  @default(true) @map("use_industry_defaults")
+  defaultDeadheadMiles     Int      @default(50) @map("default_deadhead_miles")
+
+  // Timestamps
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+/// Calculated freight rate quotes
+model Quote {
+  id                       String          @id @default(uuid())
+  userId                   String          @map("user_id")
+  vehicleId                String?         @map("vehicle_id")
+
+  // Origin location
+  originAddress            String          @map("origin_address")
+  originCity               String?         @map("origin_city")
+  originState              String?         @map("origin_state")
+  originZip                String?         @map("origin_zip")
+  originLat                Decimal?        @map("origin_lat") @db.Decimal(10, 7)
+  originLng                Decimal?        @map("origin_lng") @db.Decimal(10, 7)
+
+  // Destination location
+  destinationAddress       String          @map("destination_address")
+  destinationCity          String?         @map("destination_city")
+  destinationState         String?         @map("destination_state")
+  destinationZip           String?         @map("destination_zip")
+  destinationLat           Decimal?        @map("destination_lat") @db.Decimal(10, 7)
+  destinationLng           Decimal?        @map("destination_lng") @db.Decimal(10, 7)
+
+  // Distance calculations
+  totalMiles               Int             @map("total_miles")
+  deadheadMiles            Int             @default(0) @map("deadhead_miles")
+  // Note: loadedMiles is computed in application layer (totalMiles - deadheadMiles)
+
+  // Route info (JSON array of state codes)
+  statesCrossed            Json            @default("[]") @map("states_crossed")
+  estimatedDriveTimeHours  Decimal?        @map("estimated_drive_time_hours") @db.Decimal(6, 2)
+
+  // Load details
+  loadWeight               Int?            @map("load_weight")
+  loadType                 LoadType        @default(full_truckload) @map("load_type")
+  freightClass             FreightClass    @default(dry_van) @map("freight_class")
+  commodityType            String?         @map("commodity_type")
+  hazmatClass              String?         @map("hazmat_class")
+
+  // Service options (boolean flags)
+  isExpedite               Boolean         @default(false) @map("is_expedite")
+  isTeam                   Boolean         @default(false) @map("is_team")
+  isReefer                 Boolean         @default(false) @map("is_reefer")
+  isRush                   Boolean         @default(false) @map("is_rush")
+  isSameDay                Boolean         @default(false) @map("is_same_day")
+  requiresLiftgate         Boolean         @default(false) @map("requires_liftgate")
+  requiresPalletJack       Boolean         @default(false) @map("requires_pallet_jack")
+  requiresDriverAssist     Boolean         @default(false) @map("requires_driver_assist")
+  requiresWhiteGlove       Boolean         @default(false) @map("requires_white_glove")
+  requiresTracking         Boolean         @default(false) @map("requires_tracking")
+
+  // Reefer details
+  reeferMode               String?         @map("reefer_mode")
+  reeferTempMin            Decimal?        @map("reefer_temp_min") @db.Decimal(5, 2)
+  reeferTempMax            Decimal?        @map("reefer_temp_max") @db.Decimal(5, 2)
+
+  // Schedule
+  pickupDate               DateTime?       @map("pickup_date") @db.Date
+  pickupTimeWindow         String?         @map("pickup_time_window")
+  deliveryDate             DateTime?       @map("delivery_date") @db.Date
+  deliveryTimeWindow       String?         @map("delivery_time_window")
+
+  // Environmental factors
+  weatherCondition         WeatherCondition @default(normal) @map("weather_condition")
+  season                   String?
+
+  // Service fees breakdown (JSON)
+  serviceFees              Json            @default("{}") @map("service_fees")
+
+  // Cost breakdown (JSON)
+  costBreakdown            Json            @default("{}") @map("cost_breakdown")
+
+  // Final calculations
+  totalRate                Decimal         @map("total_rate") @db.Decimal(10, 2)
+  rpm                      Decimal?        @db.Decimal(6, 4) // Rate per mile
+  cpm                      Decimal?        @db.Decimal(6, 4) // Cost per mile
+  profitPerMile            Decimal?        @map("profit_per_mile") @db.Decimal(6, 4)
+  profitTotal              Decimal?        @map("profit_total") @db.Decimal(10, 2)
+
+  // External costs
+  tolls                    Decimal         @default(0) @db.Decimal(8, 2)
+  fuelCost                 Decimal?        @map("fuel_cost") @db.Decimal(8, 2)
+  fuelPriceUsed            Decimal?        @map("fuel_price_used") @db.Decimal(6, 3)
+
+  // Market data snapshot (JSON)
+  marketData               Json            @default("{}") @map("market_data")
+
+  // Weather data snapshot (JSON)
+  weatherData              Json            @default("{}") @map("weather_data")
+
+  // Load acceptance score
+  acceptanceScore          Decimal?        @map("acceptance_score") @db.Decimal(4, 2)
+  acceptanceRating         String?         @map("acceptance_rating")
+
+  // Quote status
+  status                   QuoteStatus     @default(calculated)
+  expiresAt                DateTime?       @map("expires_at")
+
+  // Timestamps
+  createdAt                DateTime        @default(now()) @map("created_at")
+  updatedAt                DateTime        @updatedAt @map("updated_at")
+  bookedAt                 DateTime?       @map("booked_at")
+  completedAt              DateTime?       @map("completed_at")
+
+  // Relations
+  user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle                  Vehicle?        @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  bookingRecord            BookingRecord?
+
+  @@index([userId])
+  @@index([vehicleId])
+  @@index([createdAt(sort: Desc)])
+  @@index([status])
+  @@index([userId, status])
+  @@index([originState])
+  @@index([destinationState])
+  @@index([pickupDate])
+  @@index([totalRate])
+  @@map("quotes")
+}
+
+/// Cached fuel prices by state from EIA or other sources
+model FuelPriceCache {
+  id              String     @id @default(uuid())
+  stateCode       String     @map("state_code")
+  pricePerGallon  Decimal    @map("price_per_gallon") @db.Decimal(6, 3)
+  fuelType        FuelType   @default(diesel) @map("fuel_type")
+  source          FuelSource @default(eia)
+
+  // Timestamps
+  fetchedAt       DateTime   @default(now()) @map("fetched_at")
+  expiresAt       DateTime   @map("expires_at")
+
+  @@unique([stateCode, fuelType])
+  @@index([stateCode])
+  @@index([expiresAt])
+  @@map("fuel_price_cache")
+}
+
+/// Cached toll calculations for routes
+model TollCache {
+  id              String      @id @default(uuid())
+
+  // Route identification (hashed for lookup)
+  originHash      String      @map("origin_hash")
+  destinationHash String      @map("destination_hash")
+  vehicleType     VehicleType @map("vehicle_type")
+  axleCount       Int         @default(5) @map("axle_count")
+
+  // Toll data
+  tollAmount      Decimal     @map("toll_amount") @db.Decimal(8, 2)
+  tollCount       Int         @default(0) @map("toll_count")
+  routeData       Json        @default("{}") @map("route_data")
+
+  // Timestamps
+  fetchedAt       DateTime    @default(now()) @map("fetched_at")
+  expiresAt       DateTime    @map("expires_at")
+
+  @@unique([originHash, destinationHash, vehicleType, axleCount])
+  @@index([originHash, destinationHash])
+  @@index([expiresAt])
+  @@map("toll_cache")
+}
+
+// ============================================================================
+// SUPPORTING MODELS
+// ============================================================================
+
+/// User-saved frequent routes for quick access
+model SavedTrip {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+
+  name             String
+  origin           String
+  originCity       String?   @map("origin_city")
+  originState      String?   @map("origin_state")
+  destination      String
+  destinationCity  String?   @map("destination_city")
+  destinationState String?   @map("destination_state")
+  distance         Int?
+
+  isFavorite       Boolean   @default(false) @map("is_favorite")
+  useCount         Int       @default(0) @map("use_count")
+
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  lastUsedAt       DateTime? @map("last_used_at")
+
+  // Relations
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isFavorite])
+  @@index([userId, useCount(sort: Desc)])
+  @@map("saved_trips")
+}
+
+/// Records of booked loads from quotes
+model BookingRecord {
+  id                   String   @id @default(uuid())
+  quoteId              String   @unique @map("quote_id")
+  userId               String   @map("user_id")
+
+  // Pickup contact
+  pickupContactName    String?  @map("pickup_contact_name")
+  pickupContactPhone   String?  @map("pickup_contact_phone")
+  pickupDate           DateTime @map("pickup_date") @db.Date
+  pickupTime           String?  @map("pickup_time")
+
+  // Delivery contact
+  deliveryContactName  String?  @map("delivery_contact_name")
+  deliveryContactPhone String?  @map("delivery_contact_phone")
+  deliveryDate         DateTime @map("delivery_date") @db.Date
+  deliveryTime         String?  @map("delivery_time")
+
+  // Special instructions
+  specialInstructions  String?  @map("special_instructions")
+
+  // Payment
+  paymentMethod        String   @default("standard") @map("payment_method")
+  quickpayFeeRate      Decimal  @default(0) @map("quickpay_fee_rate") @db.Decimal(5, 4)
+  originalRate         Decimal  @map("original_rate") @db.Decimal(10, 2)
+  feeAmount            Decimal  @default(0) @map("fee_amount") @db.Decimal(10, 2)
+  finalAmount          Decimal  @map("final_amount") @db.Decimal(10, 2)
+
+  // Confirmation
+  confirmationEmail    String?  @map("confirmation_email")
+  confirmationSms      String?  @map("confirmation_sms")
+  confirmationSentAt   DateTime? @map("confirmation_sent_at")
+
+  // Status
+  status               String   @default("pending")
+
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  quote                Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+  @@index([userId])
+  @@index([pickupDate])
+  @@index([status])
+  @@map("booking_records")
+}
+
+/// Achievement and rewards tracking
+model UserReward {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+
+  // Reward details
+  rewardType       String    @map("reward_type")
+  rewardName       String    @map("reward_name")
+  description      String?
+
+  // Progress
+  currentProgress  Int       @default(0) @map("current_progress")
+  targetProgress   Int       @map("target_progress")
+  isCompleted      Boolean   @default(false) @map("is_completed")
+
+  // Metadata (JSON)
+  metadata         Json      @default("{}")
+
+  // Timestamps
+  earnedAt         DateTime? @map("earned_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([rewardType])
+  @@index([userId, isCompleted])
+  @@map("user_rewards")
+}
+
+/// User referral tracking
+model Referral {
+  id             String    @id @default(uuid())
+  referrerId     String    @map("referrer_id")
+  referredId     String?   @unique @map("referred_id")
+
+  referralCode   String    @unique @map("referral_code")
+  referralEmail  String?   @map("referral_email")
+
+  status         String    @default("pending")
+  rewardEarned   Decimal   @default(0) @map("reward_earned") @db.Decimal(10, 2)
+
+  createdAt      DateTime  @default(now()) @map("created_at")
+  completedAt    DateTime? @map("completed_at")
+
+  // Relations
+  referrer       User      @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred       User?     @relation("Referred", fields: [referredId], references: [id], onDelete: SetNull)
+
+  @@index([referrerId])
+  @@index([referralCode])
+  @@index([status])
+  @@map("referrals")
+}
+
+/// Track API usage for rate limiting
+model ApiUsage {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+
+  endpoint      String
+  requestCount  Int      @default(1) @map("request_count")
+
+  // Time window
+  windowStart   DateTime @default(now()) @map("window_start")
+
+  // Rate limit tracking
+  dailyCount    Int      @default(1) @map("daily_count")
+  monthlyCount  Int      @default(1) @map("monthly_count")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, windowStart])
+  @@index([endpoint, windowStart])
+  @@map("api_usage")
+}

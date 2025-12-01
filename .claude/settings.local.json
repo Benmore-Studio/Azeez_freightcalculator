@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(gh issue create --title \"Add clickable step navigation to onboarding wizard\" --body \"$(cat <<''EOF''\nUsers cannot go back to previous onboarding steps without using browser back button. This causes issues when they need to correct information entered earlier. Add a visual step indicator that allows clicking on completed steps.\n\n## Current Behavior\n- Progress bar shows percentage but steps aren''t clickable\n- Only \"Back\" button available (goes to immediately previous step)\n- No way to jump to Step 2 from Step 4\n\n## Desired Behavior\n- Visual step indicator: `[1✓] → [2✓] → [3●] → [4] → [5]`\n- Completed steps (checkmark) are clickable\n- Current step highlighted\n- Future steps not clickable\n\n## Acceptance Criteria\n- [ ] Step indicator component created showing all 5 steps\n- [ ] Completed steps display checkmark and are clickable\n- [ ] Current step visually distinct (highlighted)\n- [ ] Clicking completed step navigates correctly\n- [ ] Progress bar percentage syncs with step indicator\n- [ ] Step indicator responsive on mobile (stacks or scrolls)\n- [ ] State persists (can click Step 2, then Step 4, then back to Step 2)\n\n## Files to Change\n- `components/ui/StepNavigator.jsx` (NEW - create component)\n- `app/page.js` (add StepNavigator, pass step/setStep props)\n- `components/Step1/Step1.jsx` (add StepNavigator at top)\n- `components/Step2/Step2.jsx` (add StepNavigator at top)\n- `components/Step3/Step3.jsx` (add StepNavigator at top)\n- `components/Step4/Step4.jsx` (add StepNavigator at top)\n- `components/Step5/Step5.jsx` (add StepNavigator at top)\n\n## Estimated Time\n3-4 hours\n\n## Dependencies\nNone (foundation ticket)\nEOF\n)\" --label \"priority: critical,type: navigation,epic: navigation-wayfinding\")",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)"
     ],
     "deny": [],
     "ask": []
