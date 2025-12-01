@@ -35,6 +35,14 @@ export default function FullCalculator({ savedVehicles = [], savedTrips = [] }) 
     console.log("Saving quote:", calculationData);
   };
 
+  const handlePreviousStage = () => {
+    const stages = ["Location", "Load Details", "Service", "Conditions"];
+    const currentIndex = stages.indexOf(stage);
+    if (currentIndex > 0) {
+      setStage(stages[currentIndex - 1]);
+    }
+  };
+
   if (showQuote) {
     return (
       <div className="mt-6">
@@ -97,10 +105,18 @@ export default function FullCalculator({ savedVehicles = [], savedTrips = [] }) 
           savedTrips={savedTrips}
         />
       )}
-      {stage === "Load Details" && <Ratecalcloaddetails setStage={setStage} />}
-      {stage === "Service" && <Ratecalcservice setStage={setStage} />}
+      {stage === "Load Details" && (
+        <Ratecalcloaddetails setStage={setStage} onPrevious={handlePreviousStage} />
+      )}
+      {stage === "Service" && (
+        <Ratecalcservice setStage={setStage} onPrevious={handlePreviousStage} />
+      )}
       {stage === "Conditions" && (
-        <RateCalcConditions setStage={setStage} onComplete={handleCalculationComplete} />
+        <RateCalcConditions
+          setStage={setStage}
+          onPrevious={handlePreviousStage}
+          onComplete={handleCalculationComplete}
+        />
       )}
     </div>
   );

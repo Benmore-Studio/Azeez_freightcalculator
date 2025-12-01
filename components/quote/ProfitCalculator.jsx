@@ -16,9 +16,13 @@ export default function ProfitCalculator({ profitData }) {
     totalCosts,
     netProfit,
     profitMargin,
+    totalMiles,
     costBreakdown,
     profitRating // poor, fair, good, excellent
   } = profitData;
+
+  // Calculate cost per mile
+  const costPerMile = totalMiles > 0 ? totalCosts / totalMiles : 0;
 
   // Calculate percentages for visual bar
   const revenuePercent = 100;
@@ -73,7 +77,7 @@ export default function ProfitCalculator({ profitData }) {
       </div>
 
       {/* Main Numbers */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm text-blue-800 font-semibold mb-1">Revenue</p>
           <p className="text-2xl font-bold text-blue-600">
@@ -86,6 +90,14 @@ export default function ProfitCalculator({ profitData }) {
           <p className="text-2xl font-bold text-gray-900">
             ${totalCosts.toLocaleString()}
           </p>
+        </div>
+
+        <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-800 font-semibold mb-1">Cost Per Mile</p>
+          <p className="text-2xl font-bold text-blue-600">
+            ${costPerMile.toFixed(2)}
+          </p>
+          <p className="text-xs text-gray-600 mt-1">{totalMiles.toLocaleString()} miles</p>
         </div>
 
         <div className={`text-center p-4 ${profitColor.bg} rounded-lg border ${profitColor.border}`}>

@@ -7,7 +7,7 @@ import Loaddetailsrefrigerator from './Loaddetailsrefrigerator';
 import { Input, Select, Button, Checkbox } from "@/components/ui";
 
 
-function Ratecalcloaddetails({setStage}) {
+function Ratecalcloaddetails({setStage, onPrevious}) {
   const [vehicle, setVehicle] = useState("Dry Van");
   const handleChange = (e) => {
     setVehicle(e.target.value);
@@ -69,11 +69,11 @@ function Ratecalcloaddetails({setStage}) {
           </div>
           <div className='flex flex-col sm:flex-row justify-between gap-3 mt-4'>
             <Button
-              onClick={() => {setStage("Location")}}
+              onClick={onPrevious}
               variant="secondary"
               size="lg"
             >
-              Previous
+              Back
             </Button>
             <Button
               onClick={() => {setStage("Service")}}

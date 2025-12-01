@@ -3,7 +3,7 @@ import { TiWeatherCloudy } from "react-icons/ti";
 import { IoSearchOutline } from "react-icons/io5";
 import { Input, Select, Button } from "@/components/ui";
 
-function RateCalcConditions({ setStage, onComplete }) {
+function RateCalcConditions({ setStage, onPrevious, onComplete }) {
   const [weatherCondition, setWeatherCondition] = useState("Normal");
   const [season, setSeason] = useState("Fall");
   const [fuelPrice, setFuelPrice] = useState("3.50");
@@ -86,11 +86,11 @@ function RateCalcConditions({ setStage, onComplete }) {
       {/* Navigation Buttons */}
       <div className='flex flex-col sm:flex-row justify-between gap-3 mt-4'>
         <Button
-          onClick={() => setStage("Service")}
+          onClick={onPrevious}
           variant="secondary"
           size="lg"
         >
-          Previous
+          Back
         </Button>
         <Button
           onClick={handleCalculateRate}

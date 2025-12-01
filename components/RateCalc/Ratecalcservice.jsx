@@ -3,7 +3,7 @@ import { IoNewspaperOutline, IoCalendarOutline } from 'react-icons/io5';
 import { BsPeople } from 'react-icons/bs';
 import { Input, Select, Button, Checkbox } from "@/components/ui";
 
-function Ratecalcservice({ setStage }) {
+function Ratecalcservice({ setStage, onPrevious }) {
   const [formData, setFormData] = useState({
     deliveryDate: '',
     deliveryTime: '',
@@ -144,11 +144,11 @@ function Ratecalcservice({ setStage }) {
       {/* Navigation Buttons */}
       <div className='flex flex-col sm:flex-row justify-between gap-3 mt-4'>
         <Button
-          onClick={() => setStage('Load Details')}
+          onClick={onPrevious}
           variant="secondary"
           size="lg"
         >
-          Previous
+          Back
         </Button>
         <Button
           onClick={() => setStage('Conditions')}

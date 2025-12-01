@@ -100,6 +100,7 @@ export default function Quote({ quoteData }) {
     totalCosts: mockTotalCosts,
     netProfit: mockRate - mockTotalCosts,
     profitMargin: ((mockRate - mockTotalCosts) / mockRate) * 100,
+    totalMiles: mockTotalMiles,
     costBreakdown: {
       fuelCost: 890.50,
       driverPay: 750.00,
