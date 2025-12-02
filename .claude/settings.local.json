@@ -6,7 +6,8 @@
       "Bash(find:*)",
       "Bash(mkdir:*)",
       "Bash(npm install:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(node --version:*)"
     ],
     "deny": [],
     "ask": []
