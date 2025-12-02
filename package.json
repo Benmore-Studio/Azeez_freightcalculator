@@ -5,8 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "dev:server": "npm run dev --prefix server",
+    "dev:all": "npm run dev & npm run dev:server",
     "build": "npx prisma generate && next build",
+    "build:server": "npm run build --prefix server",
     "start": "next start",
+    "start:server": "npm run start --prefix server",
     "lint": "eslint",
     "db:generate": "npx prisma generate",
     "db:migrate": "npx prisma migrate dev",
@@ -14,7 +18,8 @@
     "db:push": "npx prisma db push",
     "db:seed": "node --experimental-strip-types prisma/seed.js",
     "db:reset": "npx prisma migrate reset",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "server:install": "npm install --prefix server"
   },
   "prisma": {
     "seed": "node --experimental-strip-types prisma/seed.js"
