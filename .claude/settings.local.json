@@ -8,7 +8,13 @@
       "Bash(npm install:*)",
       "Bash(npx prisma:*)",
       "Bash(node --version:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(npm test:*)",
+      "Bash(pg_isready:*)",
+      "Bash(brew services list:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []
