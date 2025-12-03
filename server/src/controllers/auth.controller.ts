@@ -6,20 +6,26 @@ import { ApiError } from '../utils/ApiError.js';
 import type { AuthenticatedRequest } from '../types/index.js';
 
 // Validation schemas
-export const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-    ),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().optional(),
-  companyName: z.string().optional(),
-  userType: z.enum(['owner_operator', 'fleet_manager', 'dispatcher']).optional(),
-});
+export const registerSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    phone: z.string().optional(),
+    // Accept both camelCase and snake_case for compatibility
+    companyName: z.string().optional(),
+    company_name: z.string().optional(),
+    userType: z.enum(['owner_operator', 'fleet_manager', 'dispatcher']).optional(),
+    user_type: z.enum(['owner_operator', 'fleet_manager', 'dispatcher']).optional(),
+  })
+  .transform((data) => ({
+    email: data.email,
+    password: data.password,
+    name: data.name,
+    phone: data.phone,
+    companyName: data.companyName || data.company_name,
+    userType: data.userType || data.user_type,
+  }));
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),

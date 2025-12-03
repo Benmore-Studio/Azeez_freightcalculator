@@ -29,11 +29,11 @@ function generateTokens(user: { id: string; email: string; userType: string }): 
   };
 
   const accessToken = jwt.sign(payload, env.jwt.secret, {
-    expiresIn: env.jwt.expiresIn,
+    expiresIn: env.jwt.expiresIn as jwt.SignOptions['expiresIn'],
   });
 
   const refreshToken = jwt.sign(payload, env.jwt.refreshSecret, {
-    expiresIn: env.jwt.refreshExpiresIn,
+    expiresIn: env.jwt.refreshExpiresIn as jwt.SignOptions['expiresIn'],
   });
 
   return { accessToken, refreshToken };
@@ -67,7 +67,7 @@ function sanitizeUser(user: {
 
 export async function register(input: RegisterInput): Promise<{
   user: UserResponse;
-  tokens: TokenPair;
+  token: string;
 }> {
   const { email, password, name, phone, companyName, userType = 'owner_operator' } = input;
 
@@ -118,13 +118,13 @@ export async function register(input: RegisterInput): Promise<{
 
   return {
     user: sanitizeUser(user),
-    tokens,
+    token: tokens.accessToken,
   };
 }
 
 export async function login(input: LoginInput): Promise<{
   user: UserResponse;
-  tokens: TokenPair;
+  token: string;
 }> {
   const { email, password } = input;
 
@@ -171,7 +171,7 @@ export async function login(input: LoginInput): Promise<{
 
   return {
     user: sanitizeUser(user),
-    tokens,
+    token: tokens.accessToken,
   };
 }
 
