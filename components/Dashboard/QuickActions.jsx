@@ -1,19 +1,26 @@
 "use client";
 
 import React from "react";
-import { FaCalculator, FaTruck, FaFileAlt } from "react-icons/fa";
+import { FaCalculator, FaTruck, FaFileAlt, FaBolt } from "react-icons/fa";
 import { Card } from "@/components/ui";
 import Link from "next/link";
 
 export default function QuickActions() {
   const actions = [
     {
-      icon: FaCalculator,
-      title: "Calculate Rate",
-      description: "Get accurate rates for your loads",
-      href: "/calculator",
+      icon: FaBolt,
+      title: "Quick Quote",
+      description: "Get a fast estimate in seconds",
+      href: "/quick-quote",
       color: "blue",
       primary: true,
+    },
+    {
+      icon: FaCalculator,
+      title: "Full Calculator",
+      description: "Detailed rate calculation",
+      href: "/rate-calculator",
+      color: "blue",
     },
     {
       icon: FaTruck,

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Calculator,
+  Zap,
   FileText,
   Truck,
   Trophy,
@@ -15,20 +16,29 @@ import {
   Menu
 } from "lucide-react";
 import SidebarItem from "./SidebarItem";
+import { useAuth } from "@/context/AuthContext";
+import { showToast } from "@/lib/toast";
 
 export default function Sidebar({ className = "" }) {
   const router = useRouter();
+  const { logout, user } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const handleSignOut = () => {
-    console.log("Sign out - to be implemented with backend auth");
-    // TODO: Clear auth token, redirect to landing
-    router.push("/");
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      showToast.success("Signed out successfully");
+      router.push("/");
+    } catch (error) {
+      console.error("Sign out error:", error);
+      router.push("/");
+    }
   };
 
   const navigationItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/calculator", icon: Calculator, label: "Calculator" },
+    { href: "/quick-quote", icon: Zap, label: "Quick Quote" },
+    { href: "/rate-calculator", icon: Calculator, label: "Full Calculator" },
     { href: "/quotes", icon: FileText, label: "Quotes" },
     { href: "/vehicles", icon: Truck, label: "Vehicles" },
     { href: "/rewards", icon: Trophy, label: "Rewards" },

@@ -4,10 +4,15 @@ import React, { useState } from "react";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 import { Truck, Users, ClipboardList, Check } from "lucide-react";
 import { Input, Button, Card } from "@/components/ui";
+import { showToast } from "@/lib/toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import OnboardingModal from "@/components/Onboarding/OnboardingModal";
 
 export default function SignUpForm() {
+  const router = useRouter();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -91,20 +96,35 @@ export default function SignUpForm() {
 
     setIsSubmitting(true);
 
-    // TODO: Replace with actual API call in T7
-    // Simulating API call
-    setTimeout(() => {
-      console.log("Sign up data:", formData);
+    try {
+      // Map frontend userType to backend enum format
+      const userTypeMap = {
+        "owner-operator": "owner_operator",
+        "fleet-manager": "fleet_manager",
+        "dispatcher": "dispatcher",
+      };
+
+      await register({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        userType: userTypeMap[formData.userType] || formData.userType,
+      });
+
+      showToast.success("Account created successfully!");
       // Account created successfully - trigger onboarding modal
-      setIsSubmitting(false);
       setShowOnboarding(true);
-    }, 1500);
+    } catch (error) {
+      console.error("Sign up error:", error);
+      showToast.error(error.message || "Failed to create account");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOnboardingClose = () => {
     setShowOnboarding(false);
-    // TODO: Redirect to dashboard in T7 when backend is ready
-    console.log("Onboarding closed - would redirect to dashboard");
+    router.push("/dashboard");
   };
 
   return (

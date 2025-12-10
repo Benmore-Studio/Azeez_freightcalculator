@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import showToast from "@/lib/toast";
+import { settingsApi, vehiclesApi, authApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import Step1UserType from "./Step1UserType";
 import Step2BasicInfo from "./Step2BasicInfo";
 import Step3CostCalc from "./Step3CostCalc";
@@ -10,7 +12,9 @@ import Step4VehicleInfo from "./Step4VehicleInfo";
 import Step5Review from "./Step5Review";
 
 export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
+  const { refreshUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
   const [onboardingData, setOnboardingData] = useState({
     userType: initialData.userType || "",
     name: initialData.name || "",
@@ -52,13 +56,118 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
     setCurrentStep((prev) => prev + 1);
   };
 
-  const handleComplete = (data) => {
-    setOnboardingData((prev) => ({ ...prev, ...data }));
-    console.log("Onboarding completed with data:", { ...onboardingData, ...data });
-    // TODO: Save to backend in T7
-    // TODO: Redirect to dashboard
-    showToast.success("Onboarding complete! Redirecting to dashboard...");
-    onClose();
+  /**
+   * Map vehicle type from onboarding to backend format
+   */
+  const mapVehicleType = (vehicle) => {
+    const vehicleMap = {
+      "Semitruck": "semi",
+      "sprintervan": "sprinter",
+      "boxtruck": "box_truck",
+      "cargovan": "cargo_van",
+      "semi-truck": "semi",
+    };
+    return vehicleMap[vehicle] || "semi";
+  };
+
+  /**
+   * Map equipment type from onboarding to backend format
+   */
+  const mapEquipmentType = (equipment) => {
+    const equipmentMap = {
+      "dry-van": "dry_van",
+      "refrigerated": "refrigerated",
+      "flatbed": "flatbed",
+      "reefer": "refrigerated",
+    };
+    return equipmentMap[equipment] || "dry_van";
+  };
+
+  /**
+   * Save onboarding data to the database
+   */
+  const saveOnboardingData = async (finalData) => {
+    const results = { settings: false, vehicle: false };
+
+    // 1. Save user settings
+    try {
+      const annualMiles = finalData.costData?.frequency === "monthly"
+        ? (parseInt(finalData.costData.milesdriven) || 10000) * 12
+        : parseInt(finalData.costData.milesdriven) || 120000;
+
+      // Map to UserSettings schema
+      const settingsPayload = {
+        // Use industry defaults flag
+        useIndustryDefaults: finalData.costData?.radio === "default",
+        // Annual miles for cost allocation
+        annualMiles: annualMiles,
+        // Vehicle type preference
+        defaultVehicleType: mapVehicleType(finalData.costData?.vehicle),
+      };
+
+      await settingsApi.updateSettings(settingsPayload);
+      results.settings = true;
+      console.log("Settings saved successfully");
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+    }
+
+    // 2. Save vehicle if data was provided
+    if (finalData.vehicleData?.type && finalData.vehicleData?.year) {
+      try {
+        const vehiclePayload = {
+          name: `${finalData.vehicleData.year} ${finalData.vehicleData.make} ${finalData.vehicleData.model}`.trim() || "My Vehicle",
+          type: mapVehicleType(finalData.vehicleData.type),
+          year: parseInt(finalData.vehicleData.year) || new Date().getFullYear(),
+          make: finalData.vehicleData.make || "Unknown",
+          model: finalData.vehicleData.model || "Unknown",
+          vin: finalData.vehicleData.vin || null,
+          mpg: parseFloat(finalData.vehicleData.mpg) || 6.5,
+          fuelType: finalData.vehicleData.fuelType || "diesel",
+          equipment: mapEquipmentType(finalData.vehicleData.equipment?.[0]) || "dry_van",
+          isPrimary: true,
+        };
+
+        await vehiclesApi.createVehicle(vehiclePayload);
+        results.vehicle = true;
+        console.log("Vehicle saved successfully");
+      } catch (error) {
+        console.error("Failed to save vehicle:", error);
+      }
+    }
+
+    return results;
+  };
+
+  const handleComplete = async (data) => {
+    const finalData = { ...onboardingData, ...data };
+    setOnboardingData(finalData);
+    setIsSaving(true);
+
+    try {
+      // Save onboarding data to database
+      const results = await saveOnboardingData(finalData);
+
+      // Refresh user data to update onboarding status
+      if (refreshUser) {
+        await refreshUser();
+      }
+
+      // Show success message
+      if (results.settings || results.vehicle) {
+        showToast.success("Profile setup complete! Welcome to your dashboard.");
+      } else {
+        showToast.success("Setup complete! You can update your settings anytime.");
+      }
+
+      console.log("Onboarding completed with data:", finalData);
+      onClose();
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+      showToast.error("There was an issue saving your data. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -153,6 +262,7 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
               data={onboardingData}
               onPrevious={handlePrevious}
               onComplete={handleComplete}
+              isSaving={isSaving}
             />
           )}
         </div>

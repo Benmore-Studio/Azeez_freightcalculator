@@ -1,11 +1,13 @@
 "use client";
 import React from "react";
 import DashboardOverview from "@/components/Dashboard/DashboardOverview";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardPage() {
-  // TODO: Get actual user data from auth context in T7
-  // For now, using mock data
-  const userName = "John"; // Will be replaced with actual user name from auth
+  const { user } = useAuth();
+
+  // Get first name from user's full name
+  const userName = user?.name?.split(" ")[0] || "User";
 
   return <DashboardOverview userName={userName} />;
 }

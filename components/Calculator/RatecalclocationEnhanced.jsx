@@ -1,21 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoLocationOutline } from "react-icons/io5";
 import { FaArrowRightLong, FaTruck, FaRoute } from "react-icons/fa6";
 import { TbCube } from "react-icons/tb";
 import { MdCallSplit } from "react-icons/md";
 import { Input, Select, Button, Checkbox } from "@/components/ui";
+import { useAppContext } from "@/context/AppContext";
 
 export default function RatecalclocationEnhanced({ setStage, savedVehicles = [], savedTrips = [] }) {
-  const [loadtype, setLoadtype] = useState(null);
-  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const { calculatorData, updateCalculatorData } = useAppContext();
+
+  const [loadtype, setLoadtype] = useState(calculatorData.loadType === "ltl" ? "LTL (Partial)" : "Full Load");
+  const [selectedVehicle, setSelectedVehicle] = useState(calculatorData.vehicleId || "");
   const [selectedTrip, setSelectedTrip] = useState("");
-  const [selectedEquipment, setSelectedEquipment] = useState("");
+  const [selectedEquipment, setSelectedEquipment] = useState(calculatorData.equipmentType || "");
   const [formData, setFormData] = useState({
-    origin: "",
-    destination: "",
-    deadheadMiles: "",
+    origin: calculatorData.origin || "",
+    destination: calculatorData.destination || "",
+    deadheadMiles: calculatorData.deadheadMiles || "",
   });
 
   // Handle vehicle selection
@@ -258,7 +261,35 @@ export default function RatecalclocationEnhanced({ setStage, savedVehicles = [],
       {/* Next Button */}
       <div className="flex justify-end mt-4">
         <Button
-          onClick={() => setStage("Load Details")}
+          onClick={() => {
+            // Map equipment type to backend format
+            const equipmentMap = {
+              "dry-van": "dry_van",
+              "refrigerated": "refrigerated",
+              "flatbed": "flatbed",
+            };
+
+            // Map vehicle type from selected vehicle
+            const vehicle = savedVehicles.find((v) => v.id === parseInt(selectedVehicle));
+            const vehicleTypeMap = {
+              "semi-truck": "semi_truck",
+              "sprinter-van": "sprinter_van",
+              "box-truck": "box_truck",
+              "cargo-van": "cargo_van",
+            };
+
+            // Save to context
+            updateCalculatorData({
+              origin: formData.origin,
+              destination: formData.destination,
+              deadheadMiles: parseInt(formData.deadheadMiles) || 0,
+              loadType: loadtype === "LTL (Partial)" ? "ltl" : "full_load",
+              vehicleId: selectedVehicle ? parseInt(selectedVehicle) : null,
+              vehicleType: vehicle ? (vehicleTypeMap[vehicle.type] || "semi_truck") : "semi_truck",
+              equipmentType: equipmentMap[selectedEquipment] || "dry_van",
+            });
+            setStage("Load Details");
+          }}
           size="lg"
         >
           Next: Load Details

@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, User, Truck, DollarSign } from "lucide-react";
-import { Button } from "@/components/ui";
+import { CheckCircle2, User, Truck, DollarSign, Loader2 } from "lucide-react";
+import { Button, Spinner } from "@/components/ui";
 
-export default function Step5Review({ data, onPrevious, onComplete }) {
+export default function Step5Review({ data, onPrevious, onComplete, isSaving = false }) {
   const getUserTypeLabel = (value) => {
     const types = {
       "owner-operator": "Owner Operator",
@@ -227,11 +227,23 @@ export default function Step5Review({ data, onPrevious, onComplete }) {
 
       {/* Action Buttons */}
       <div className="flex justify-between pt-4">
-        <Button onClick={onPrevious} variant="outline" size="lg">
+        <Button onClick={onPrevious} variant="outline" size="lg" disabled={isSaving}>
           Back
         </Button>
-        <Button onClick={() => onComplete({})} size="lg" className="px-8">
-          Complete Setup & Go to Dashboard
+        <Button
+          onClick={() => onComplete({})}
+          size="lg"
+          className="px-8"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <Spinner size="sm" className="mr-2" />
+              Saving...
+            </>
+          ) : (
+            "Complete Setup & Go to Dashboard"
+          )}
         </Button>
       </div>
     </div>

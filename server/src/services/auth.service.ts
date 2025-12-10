@@ -67,7 +67,8 @@ function sanitizeUser(user: {
 
 export async function register(input: RegisterInput): Promise<{
   user: UserResponse;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }> {
   const { email, password, name, phone, companyName, userType = 'owner_operator' } = input;
 
@@ -118,13 +119,15 @@ export async function register(input: RegisterInput): Promise<{
 
   return {
     user: sanitizeUser(user),
-    token: tokens.accessToken,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
   };
 }
 
 export async function login(input: LoginInput): Promise<{
   user: UserResponse;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }> {
   const { email, password } = input;
 
@@ -171,7 +174,8 @@ export async function login(input: LoginInput): Promise<{
 
   return {
     user: sanitizeUser(user),
-    token: tokens.accessToken,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
   };
 }
 

@@ -2,16 +2,76 @@ import React, { useState } from 'react';
 import { IoNewspaperOutline, IoCalendarOutline } from 'react-icons/io5';
 import { BsPeople } from 'react-icons/bs';
 import { Input, Select, Button, Checkbox } from "@/components/ui";
+import { useAppContext } from "@/context/AppContext";
 
 function Ratecalcservice({ setStage, onPrevious }) {
+  const { calculatorData, updateCalculatorData, userSettings } = useAppContext();
+
+  // Get user's custom multipliers or use defaults
+  const getMultiplierDisplay = (type) => {
+    const defaults = {
+      standard: 1.0,
+      express: 1.15,
+      rush: 1.30,
+      sameDay: 1.50,
+      teamDriver: 1.50,
+    };
+
+    if (!userSettings) return defaults[type];
+
+    const settingsMap = {
+      standard: Number(userSettings.standardMultiplier) || defaults.standard,
+      express: Number(userSettings.expressMultiplier) || defaults.express,
+      rush: Number(userSettings.rushMultiplier) || defaults.rush,
+      sameDay: Number(userSettings.sameDayMultiplier) || defaults.sameDay,
+      teamDriver: Number(userSettings.teamDriverMultiplier) || defaults.teamDriver,
+    };
+
+    return settingsMap[type] || defaults[type];
+  };
+
+  // Format multiplier as percentage
+  const formatMultiplier = (multiplier) => {
+    if (multiplier === 1.0) return 'Base rate';
+    const percentage = Math.round((multiplier - 1) * 100);
+    return `+${percentage}%`;
+  };
+
+  // Map backend values to display values
+  const urgencyBackendToDisplay = {
+    "standard": "Standard",
+    "express": "Express",
+    "rush": "Rush",
+    "same_day": "Same Day",
+  };
+
+  const driverBackendToDisplay = {
+    "solo": "Solo Driver",
+    "team": "Team Driver",
+  };
+
+  const serviceLevelBackendToDisplay = {
+    "driver_assist": "Driver Assist",
+    "white_glove": "White Glove",
+    "inside_delivery": "Inside Delivery",
+    "curbside": "Curbside",
+  };
+
+  const trackingBackendToDisplay = {
+    "standard": "Standard (Check Calls)",
+    "realtime_gps": "Real-time GPS",
+    "enhanced": "Enhanced",
+    "none": "None",
+  };
+
   const [formData, setFormData] = useState({
-    deliveryDate: '',
-    deliveryTime: '',
-    deliveryUrgency: 'Standard',
-    driverType: 'Solo Driver',
-    serviceLevel: 'Driver Assist',
-    trackingRequirements: 'Standard (Check Calls)',
-    specialEquipment: []
+    deliveryDate: calculatorData.deliveryDate || '',
+    deliveryTime: calculatorData.deliveryTime || '',
+    deliveryUrgency: urgencyBackendToDisplay[calculatorData.deliveryUrgency] || 'Standard',
+    driverType: driverBackendToDisplay[calculatorData.driverType] || 'Solo Driver',
+    serviceLevel: serviceLevelBackendToDisplay[calculatorData.serviceLevel] || 'Driver Assist',
+    trackingRequirements: trackingBackendToDisplay[calculatorData.trackingRequirements] || 'Standard (Check Calls)',
+    specialEquipment: calculatorData.specialEquipment || []
   });
 
   const handleEquipmentToggle = (equipment) => {
@@ -74,19 +134,20 @@ function Ratecalcservice({ setStage, onPrevious }) {
           value={formData.deliveryUrgency}
           onChange={(e) => handleInputChange('deliveryUrgency', e.target.value)}
           options={[
-            { value: 'Standard', label: 'Standard (Base rate)' },
-            { value: 'Express', label: 'Express (+15%)' },
-            { value: 'Rush', label: 'Rush (+30%)' },
-            { value: 'Same Day', label: 'Same Day (+50%)' },
+            { value: 'Standard', label: `Standard (${formatMultiplier(getMultiplierDisplay('standard'))})` },
+            { value: 'Express', label: `Express (${formatMultiplier(getMultiplierDisplay('express'))})` },
+            { value: 'Rush', label: `Rush (${formatMultiplier(getMultiplierDisplay('rush'))})` },
+            { value: 'Same Day', label: `Same Day (${formatMultiplier(getMultiplierDisplay('sameDay'))})` },
           ]}
+          helperText={userSettings ? "Rates from your settings" : "Using industry default rates"}
         />
         <Select
           label="Driver Type"
           value={formData.driverType}
           onChange={(e) => handleInputChange('driverType', e.target.value)}
           options={[
-            { value: 'Solo Driver', label: 'Solo Driver' },
-            { value: 'Team Driver', label: 'Team Driver' },
+            { value: 'Solo Driver', label: 'Solo Driver (Base rate)' },
+            { value: 'Team Driver', label: `Team Driver (${formatMultiplier(getMultiplierDisplay('teamDriver'))})` },
           ]}
         />
       </div>
@@ -151,7 +212,45 @@ function Ratecalcservice({ setStage, onPrevious }) {
           Back
         </Button>
         <Button
-          onClick={() => setStage('Conditions')}
+          onClick={() => {
+            // Map display values to backend values
+            const urgencyDisplayToBackend = {
+              "Standard": "standard",
+              "Express": "express",
+              "Rush": "rush",
+              "Same Day": "same_day",
+            };
+
+            const driverDisplayToBackend = {
+              "Solo Driver": "solo",
+              "Team Driver": "team",
+            };
+
+            const serviceLevelDisplayToBackend = {
+              "Driver Assist": "driver_assist",
+              "White Glove": "white_glove",
+              "Inside Delivery": "inside_delivery",
+              "Curbside": "curbside",
+            };
+
+            const trackingDisplayToBackend = {
+              "Standard (Check Calls)": "standard",
+              "Real-time GPS": "realtime_gps",
+              "Enhanced": "enhanced",
+              "None": "none",
+            };
+
+            updateCalculatorData({
+              deliveryDate: formData.deliveryDate,
+              deliveryTime: formData.deliveryTime,
+              deliveryUrgency: urgencyDisplayToBackend[formData.deliveryUrgency] || "standard",
+              driverType: driverDisplayToBackend[formData.driverType] || "solo",
+              serviceLevel: serviceLevelDisplayToBackend[formData.serviceLevel] || "driver_assist",
+              trackingRequirements: trackingDisplayToBackend[formData.trackingRequirements] || "standard",
+              specialEquipment: formData.specialEquipment,
+            });
+            setStage('Conditions');
+          }}
           size="lg"
         >
           Next: Conditions

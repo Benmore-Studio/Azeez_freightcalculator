@@ -1,45 +1,42 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { FaMapMarkerAlt, FaArrowRight, FaChartLine } from "react-icons/fa";
-import { Card, Button } from "@/components/ui";
+import { Card, Button, Spinner } from "@/components/ui";
+import { quotesApi } from "@/lib/api";
 
 export default function RecentQuotes() {
-  // Mock data - will be replaced with actual data from backend
-  // Only showing 3 most recent
-  const recentQuotes = [
-    {
-      id: 1,
-      origin: "Chicago, IL",
-      destination: "Los Angeles, CA",
-      rate: 4250.00,
-      profit: 1150.00,
-      profitMargin: 27,
-      date: "2024-11-01",
-      miles: 2015,
-    },
-    {
-      id: 2,
-      origin: "Dallas, TX",
-      destination: "Atlanta, GA",
-      rate: 2890.00,
-      profit: 680.00,
-      profitMargin: 24,
-      date: "2024-10-30",
-      miles: 780,
-    },
-    {
-      id: 3,
-      origin: "Miami, FL",
-      destination: "New York, NY",
-      rate: 3420.00,
-      profit: 920.00,
-      profitMargin: 27,
-      date: "2024-10-28",
-      miles: 1280,
-    },
-  ];
+  const [recentQuotes, setRecentQuotes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadRecentQuotes();
+  }, []);
+
+  const loadRecentQuotes = async () => {
+    try {
+      const quotes = await quotesApi.getRecentQuotes(3);
+      // Transform to display format
+      const transformed = quotes.map((q) => ({
+        id: q.id,
+        origin: q.origin,
+        destination: q.destination,
+        rate: q.recommendedRate || 0,
+        profit: (q.recommendedRate || 0) - (q.totalCosts || 0),
+        profitMargin: q.recommendedRate
+          ? Math.round(((q.recommendedRate - (q.totalCosts || 0)) / q.recommendedRate) * 100)
+          : 0,
+        date: q.createdAt,
+        miles: q.totalMiles || 0,
+      }));
+      setRecentQuotes(transformed);
+    } catch (error) {
+      console.error("Failed to load recent quotes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getProfitColor = (margin) => {
     if (margin >= 30) return "text-green-600 bg-green-50";
@@ -62,60 +59,73 @@ export default function RecentQuotes() {
       </div>
 
       <div className="space-y-3">
-        {recentQuotes.map((quote) => (
-          <div
-            key={quote.id}
-            className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer"
-          >
-            <div className="flex items-start justify-between">
-              {/* Route Info */}
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <FaMapMarkerAlt className="text-blue-600 text-sm" />
-                  <span className="font-semibold text-gray-900 text-sm">
-                    {quote.origin}
-                  </span>
-                  <FaArrowRight className="text-gray-400 text-xs" />
-                  <span className="font-semibold text-gray-900 text-sm">
-                    {quote.destination}
-                  </span>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Spinner size="md" />
+          </div>
+        ) : recentQuotes.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-2">No quotes yet</p>
+            <Link href="/rate-calculator">
+              <Button size="sm">Calculate Your First Rate</Button>
+            </Link>
+          </div>
+        ) : (
+          recentQuotes.map((quote) => (
+            <div
+              key={quote.id}
+              className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer"
+            >
+              <div className="flex items-start justify-between">
+                {/* Route Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FaMapMarkerAlt className="text-blue-600 text-sm" />
+                    <span className="font-semibold text-gray-900 text-sm">
+                      {quote.origin}
+                    </span>
+                    <FaArrowRight className="text-gray-400 text-xs" />
+                    <span className="font-semibold text-gray-900 text-sm">
+                      {quote.destination}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Rate:</span>{" "}
+                      <span className="font-bold text-gray-900">
+                        ${quote.rate.toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Profit:</span>{" "}
+                      <span className="font-bold text-green-600">
+                        +${quote.profit.toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(quote.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Rate:</span>{" "}
-                    <span className="font-bold text-gray-900">
-                      ${quote.rate.toLocaleString()}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Profit:</span>{" "}
-                    <span className="font-bold text-green-600">
-                      +${quote.profit.toLocaleString()}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500">
-                      {new Date(quote.date).toLocaleDateString()}
-                    </span>
-                  </div>
+                {/* Profit Margin Badge */}
+                <div
+                  className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 ${getProfitColor(
+                    quote.profitMargin
+                  )}`}
+                >
+                  <FaChartLine className="text-xs" />
+                  <span className="font-bold text-sm">
+                    {quote.profitMargin}%
+                  </span>
                 </div>
-              </div>
-
-              {/* Profit Margin Badge */}
-              <div
-                className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 ${getProfitColor(
-                  quote.profitMargin
-                )}`}
-              >
-                <FaChartLine className="text-xs" />
-                <span className="font-bold text-sm">
-                  {quote.profitMargin}%
-                </span>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* View All Link */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaFileAlt,
   FaChartLine,
@@ -9,47 +9,74 @@ import {
   FaArrowUp,
   FaArrowDown,
 } from "react-icons/fa";
+import { quotesApi } from "@/lib/api";
 
 export default function QuickStats() {
-  // Mock data - will be replaced with actual data from backend
+  const [statsData, setStatsData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const data = await quotesApi.getQuoteStats();
+      setStatsData(data);
+    } catch (error) {
+      console.error("Failed to load stats:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Format large numbers
+  const formatNumber = (num) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + "K";
+    }
+    return num?.toString() || "0";
+  };
+
+  // Build stats array from API data
   const stats = [
     {
       id: 1,
       label: "Total Quotes",
-      value: "47",
-      change: "+12%",
-      changeType: "increase",
-      period: "vs last month",
+      value: statsData?.totalQuotes?.toString() || "0",
+      change: null,
+      changeType: null,
+      period: "all time",
       icon: FaFileAlt,
       color: "blue",
     },
     {
       id: 2,
       label: "Avg Profit Margin",
-      value: "26.4%",
-      change: "+3.2%",
-      changeType: "increase",
-      period: "vs last month",
+      value: statsData?.avgProfitMargin ? `${statsData.avgProfitMargin.toFixed(1)}%` : "0%",
+      change: null,
+      changeType: null,
+      period: "across all quotes",
       icon: FaChartLine,
       color: "green",
     },
     {
       id: 3,
       label: "Total Miles",
-      value: "48.5K",
-      change: "+8%",
-      changeType: "increase",
-      period: "this month",
+      value: formatNumber(statsData?.totalMiles || 0),
+      change: null,
+      changeType: null,
+      period: "all routes",
       icon: FaTruckMoving,
-      color: "purple",
+      color: "blue",
     },
     {
       id: 4,
-      label: "Most Profitable Route",
-      value: "CHI → LA",
-      subValue: "$1,150 profit",
+      label: "Total Revenue",
+      value: `$${formatNumber(statsData?.totalRevenue || 0)}`,
+      subValue: statsData?.totalQuotes ? `${statsData.totalQuotes} quotes` : "No quotes yet",
       icon: FaMapMarkedAlt,
-      color: "orange",
+      color: "green",
     },
   ];
 

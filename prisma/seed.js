@@ -6,14 +6,17 @@
 
 import { PrismaClient } from '../lib/generated/prisma/index.js'
 import { createHash } from 'crypto'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient({
   errorFormat: 'pretty',
 })
 
-// Helper to hash passwords (in production, use bcrypt)
-function hashPassword(password) {
-  return createHash('sha256').update(password).digest('hex')
+const SALT_ROUNDS = 12
+
+// Helper to hash passwords using bcrypt (matches auth service)
+async function hashPassword(password) {
+  return bcrypt.hash(password, SALT_ROUNDS)
 }
 
 // Helper to hash addresses for toll cache
@@ -42,14 +45,17 @@ async function main() {
   // =========================================================================
   console.log('👤 Creating test users...')
 
+  // Pre-hash the password once (all test users use same password)
+  const hashedPassword = await hashPassword('password123')
+
   const users = await Promise.all([
     // Owner Operator - Primary test user
     prisma.user.upsert({
       where: { email: 'john.trucker@example.com' },
-      update: {},
+      update: { passwordHash: hashedPassword },
       create: {
         email: 'john.trucker@example.com',
-        passwordHash: hashPassword('password123'),
+        passwordHash: hashedPassword,
         name: 'John Trucker',
         phone: '555-123-4567',
         companyName: 'JT Trucking LLC',
@@ -65,10 +71,10 @@ async function main() {
     // Fleet Manager
     prisma.user.upsert({
       where: { email: 'sarah.fleet@example.com' },
-      update: {},
+      update: { passwordHash: hashedPassword },
       create: {
         email: 'sarah.fleet@example.com',
-        passwordHash: hashPassword('password123'),
+        passwordHash: hashedPassword,
         name: 'Sarah Fleet',
         phone: '555-234-5678',
         companyName: 'Swift Fleet Solutions',
@@ -84,10 +90,10 @@ async function main() {
     // Dispatcher
     prisma.user.upsert({
       where: { email: 'mike.dispatch@example.com' },
-      update: {},
+      update: { passwordHash: hashedPassword },
       create: {
         email: 'mike.dispatch@example.com',
-        passwordHash: hashPassword('password123'),
+        passwordHash: hashedPassword,
         name: 'Mike Dispatcher',
         phone: '555-345-6789',
         companyName: 'Central Dispatch Co',
@@ -103,10 +109,10 @@ async function main() {
     // New user (mid-onboarding)
     prisma.user.upsert({
       where: { email: 'new.user@example.com' },
-      update: {},
+      update: { passwordHash: hashedPassword },
       create: {
         email: 'new.user@example.com',
-        passwordHash: hashPassword('password123'),
+        passwordHash: hashedPassword,
         name: 'New User',
         phone: '555-456-7890',
         userType: 'owner_operator',
@@ -909,8 +915,17 @@ async function main() {
   console.log('🛣️  Creating toll cache...')
 
   const tollCacheEntries = await Promise.all([
-    prisma.tollCache.create({
-      data: {
+    prisma.tollCache.upsert({
+      where: {
+        originHash_destinationHash_vehicleType_axleCount: {
+          originHash: hashAddress('1000 Main St, Dallas, TX 75201'),
+          destinationHash: hashAddress('233 S Wacker Dr, Chicago, IL 60606'),
+          vehicleType: 'semi',
+          axleCount: 5,
+        },
+      },
+      update: { expiresAt: daysFromNow(7) },
+      create: {
         originHash: hashAddress('1000 Main St, Dallas, TX 75201'),
         destinationHash: hashAddress('233 S Wacker Dr, Chicago, IL 60606'),
         vehicleType: 'semi',
@@ -930,8 +945,17 @@ async function main() {
         expiresAt: daysFromNow(7),
       },
     }),
-    prisma.tollCache.create({
-      data: {
+    prisma.tollCache.upsert({
+      where: {
+        originHash_destinationHash_vehicleType_axleCount: {
+          originHash: hashAddress('1600 Smith St, Houston, TX 77002'),
+          destinationHash: hashAddress('200 Peachtree St NE, Atlanta, GA 30303'),
+          vehicleType: 'semi',
+          axleCount: 5,
+        },
+      },
+      update: { expiresAt: daysFromNow(7) },
+      create: {
         originHash: hashAddress('1600 Smith St, Houston, TX 77002'),
         destinationHash: hashAddress('200 Peachtree St NE, Atlanta, GA 30303'),
         vehicleType: 'semi',

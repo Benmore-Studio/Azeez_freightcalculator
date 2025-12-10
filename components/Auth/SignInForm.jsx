@@ -6,9 +6,11 @@ import { Input, Button, Card, Checkbox } from "@/components/ui";
 import { showToast } from "@/lib/toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignInForm() {
   const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -60,14 +62,16 @@ export default function SignInForm() {
 
     setIsSubmitting(true);
 
-    // TODO: Replace with actual API call when backend is ready
-    // Simulating API call
-    setTimeout(() => {
-      console.log("Sign in data:", formData);
+    try {
+      await login(formData.email, formData.password);
       showToast.success("Welcome back! Signed in successfully.");
-      // TODO: Set auth token when backend is ready
       router.push("/dashboard");
-    }, 1000);
+    } catch (error) {
+      console.error("Sign in error:", error);
+      showToast.error(error.message || "Invalid email or password");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

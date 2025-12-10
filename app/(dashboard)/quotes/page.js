@@ -1,86 +1,63 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaMapMarkerAlt, FaArrowRight, FaChartLine, FaSearch, FaFilter, FaDownload, FaTrash, FaArchive } from "react-icons/fa";
-import { Card, Button, Input } from "@/components/ui";
+import { Card, Button, Input, Spinner } from "@/components/ui";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { showToast } from "@/lib/toast";
+import { quotesApi } from "@/lib/api";
 
 export default function QuotesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all"); // all, active, archived
+  const [filterStatus, setFilterStatus] = useState("all"); // all, draft, sent, accepted, rejected, expired
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, quoteId: null });
+  const [allQuotes, setAllQuotes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0 });
 
-  // Mock data - will be replaced with actual data from backend
-  const allQuotes = [
-    {
-      id: 1,
-      origin: "Chicago, IL",
-      destination: "Los Angeles, CA",
-      rate: 4250.00,
-      profit: 1150.00,
-      profitMargin: 27,
-      date: "2024-11-01",
-      miles: 2015,
-      status: "active"
-    },
-    {
-      id: 2,
-      origin: "Dallas, TX",
-      destination: "Atlanta, GA",
-      rate: 2890.00,
-      profit: 680.00,
-      profitMargin: 24,
-      date: "2024-10-30",
-      miles: 780,
-      status: "active"
-    },
-    {
-      id: 3,
-      origin: "Miami, FL",
-      destination: "New York, NY",
-      rate: 3420.00,
-      profit: 920.00,
-      profitMargin: 27,
-      date: "2024-10-28",
-      miles: 1280,
-      status: "archived"
-    },
-    {
-      id: 4,
-      origin: "Seattle, WA",
-      destination: "Denver, CO",
-      rate: 2150.00,
-      profit: 540.00,
-      profitMargin: 25,
-      date: "2024-10-25",
-      miles: 1315,
-      status: "active"
-    },
-    {
-      id: 5,
-      origin: "Phoenix, AZ",
-      destination: "Portland, OR",
-      rate: 3100.00,
-      profit: 810.00,
-      profitMargin: 26,
-      date: "2024-10-22",
-      miles: 1425,
-      status: "active"
-    },
-  ];
+  useEffect(() => {
+    loadQuotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatus]);
 
-  // Filter quotes based on search and status
+  const loadQuotes = async () => {
+    setIsLoading(true);
+    try {
+      const status = filterStatus === "all" ? undefined : filterStatus;
+      const response = await quotesApi.getQuotes(pagination.page, pagination.limit, status);
+
+      // Transform quotes to display format
+      const transformedQuotes = response.data.map((q) => ({
+        id: q.id,
+        origin: q.origin,
+        destination: q.destination,
+        rate: q.recommendedRate || 0,
+        profit: (q.recommendedRate || 0) - (q.totalCosts || 0),
+        profitMargin: q.recommendedRate ? Math.round(((q.recommendedRate - (q.totalCosts || 0)) / q.recommendedRate) * 100) : 0,
+        date: q.createdAt,
+        miles: q.totalMiles || 0,
+        status: q.status || "draft",
+        ratePerMile: q.ratePerMile || 0,
+      }));
+
+      setAllQuotes(transformedQuotes);
+      setPagination((prev) => ({ ...prev, total: response.pagination?.total || transformedQuotes.length }));
+    } catch (error) {
+      console.error("Failed to load quotes:", error);
+      showToast.error("Failed to load quotes");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter quotes based on search (status filter is handled by API)
   const filteredQuotes = allQuotes.filter((quote) => {
     const matchesSearch =
       searchQuery === "" ||
       quote.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quote.destination.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      filterStatus === "all" || quote.status === filterStatus;
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   const getProfitColor = (margin) => {
@@ -89,22 +66,57 @@ export default function QuotesPage() {
     return "text-orange-600 bg-orange-50";
   };
 
+  const getStatusLabel = (status) => {
+    const labels = {
+      draft: "Draft",
+      sent: "Sent",
+      accepted: "Accepted",
+      rejected: "Rejected",
+      expired: "Expired",
+    };
+    return labels[status] || status;
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      draft: "bg-gray-100 text-gray-600",
+      sent: "bg-blue-100 text-blue-600",
+      accepted: "bg-green-100 text-green-600",
+      rejected: "bg-red-100 text-red-600",
+      expired: "bg-orange-100 text-orange-600",
+    };
+    return colors[status] || "bg-gray-100 text-gray-600";
+  };
+
   const handleExport = (quoteId) => {
     showToast.info("PDF export coming in Phase 2");
   };
 
-  const handleArchive = (quoteId) => {
-    showToast.success("Quote archived successfully");
-    // TODO: Update quote status to archived
+  const handleArchive = async (quoteId) => {
+    try {
+      await quotesApi.updateQuoteStatus(quoteId, "expired");
+      showToast.success("Quote archived successfully");
+      loadQuotes();
+    } catch (error) {
+      console.error("Failed to archive quote:", error);
+      showToast.error("Failed to archive quote");
+    }
   };
 
   const handleDelete = (quoteId) => {
     setDeleteConfirm({ isOpen: true, quoteId });
   };
 
-  const confirmDelete = () => {
-    showToast.success("Quote deleted successfully");
-    // TODO: Delete quote from database
+  const confirmDelete = async () => {
+    try {
+      await quotesApi.deleteQuote(deleteConfirm.quoteId);
+      showToast.success("Quote deleted successfully");
+      setDeleteConfirm({ isOpen: false, quoteId: null });
+      loadQuotes();
+    } catch (error) {
+      console.error("Failed to delete quote:", error);
+      showToast.error("Failed to delete quote");
+    }
   };
 
   return (
@@ -136,34 +148,46 @@ export default function QuotesPage() {
             </div>
 
             {/* Status Filter */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
                 variant={filterStatus === "all" ? "primary" : "secondary"}
                 onClick={() => setFilterStatus("all")}
               >
-                All ({allQuotes.length})
+                All
               </Button>
               <Button
                 size="sm"
-                variant={filterStatus === "active" ? "primary" : "secondary"}
-                onClick={() => setFilterStatus("active")}
+                variant={filterStatus === "draft" ? "primary" : "secondary"}
+                onClick={() => setFilterStatus("draft")}
               >
-                Active ({allQuotes.filter(q => q.status === "active").length})
+                Draft
               </Button>
               <Button
                 size="sm"
-                variant={filterStatus === "archived" ? "primary" : "secondary"}
-                onClick={() => setFilterStatus("archived")}
+                variant={filterStatus === "sent" ? "primary" : "secondary"}
+                onClick={() => setFilterStatus("sent")}
               >
-                Archived ({allQuotes.filter(q => q.status === "archived").length})
+                Sent
+              </Button>
+              <Button
+                size="sm"
+                variant={filterStatus === "accepted" ? "primary" : "secondary"}
+                onClick={() => setFilterStatus("accepted")}
+              >
+                Accepted
               </Button>
             </div>
           </div>
         </Card>
 
         {/* Quotes List */}
-        {filteredQuotes.length === 0 ? (
+        {isLoading ? (
+          <Card className="p-12 text-center bg-white border-2 border-gray-200">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading quotes...</p>
+          </Card>
+        ) : filteredQuotes.length === 0 ? (
           <Card className="p-12 text-center bg-white border-2 border-gray-200">
             <div className="text-gray-400 mb-3">
               <FaSearch className="mx-auto text-5xl" />
@@ -174,7 +198,7 @@ export default function QuotesPage() {
                 ? "Try adjusting your search"
                 : "Calculate your first rate to see it here"}
             </p>
-            <Button size="sm" href="/calculator">
+            <Button size="sm" href="/rate-calculator">
               Calculate Rate
             </Button>
           </Card>
@@ -197,11 +221,9 @@ export default function QuotesPage() {
                       <span className="font-semibold text-gray-900 text-lg">
                         {quote.destination}
                       </span>
-                      {quote.status === "archived" && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                          Archived
-                        </span>
-                      )}
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(quote.status)}`}>
+                        {getStatusLabel(quote.status)}
+                      </span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-6 text-sm">
