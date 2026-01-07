@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaTruck, FaPlus, FaClock } from "react-icons/fa";
+import { FaTruck, FaPlus, FaClock, FaCheckCircle } from "react-icons/fa";
 import { Button } from "@/components/ui";
 import BookingModal from "./BookingModal";
 
-export default function BookingSection({ data, formatCurrency, handleViewBookingPolicies }) {
+export default function BookingSection({ data, formatCurrency, handleViewBookingPolicies, quoteData, onBookingComplete }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBooked, setIsBooked] = useState(false);
 
   const handleBookNow = () => {
     setIsModalOpen(true);
@@ -15,6 +16,31 @@ export default function BookingSection({ data, formatCurrency, handleViewBooking
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
+
+  const handleBookingComplete = (booking) => {
+    setIsBooked(true);
+    setIsModalOpen(false);
+    if (onBookingComplete) {
+      onBookingComplete(booking);
+    }
+  };
+
+  // If already booked, show confirmation
+  if (isBooked || quoteData?.status === 'booked') {
+    return (
+      <div className="bg-white rounded-xl border border-green-200 p-4 sm:p-6">
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="bg-green-100 p-3 rounded-full">
+            <FaCheckCircle className="text-green-600 text-2xl sm:text-3xl" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Load Booked</h2>
+          <p className="text-gray-600">
+            This load has been successfully booked. You will receive a confirmation shortly.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -63,6 +89,8 @@ export default function BookingSection({ data, formatCurrency, handleViewBooking
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         handleViewBookingPolicies={handleViewBookingPolicies}
+        quoteData={quoteData || data}
+        onBookingComplete={handleBookingComplete}
       />
     </>
   );

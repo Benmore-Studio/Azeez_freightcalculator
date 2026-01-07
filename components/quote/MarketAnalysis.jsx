@@ -2,9 +2,8 @@
 
 import React from "react";
 import { MdShowChart, MdTrendingDown } from "react-icons/md";
-import { Button } from "@/components/ui";
 
-export default function MarketAnalysis({ data, handleSelectLane }) {
+export default function MarketAnalysis({ data }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-4 sm:mb-6">
@@ -71,25 +70,24 @@ export default function MarketAnalysis({ data, handleSelectLane }) {
 
           <div className="space-y-2 sm:space-y-3">
             {data?.marketAnalysis?.nextMoneyLanes?.map((lane) => (
-              <button
+              <div
                 key={lane?.id}
-                onClick={() => handleSelectLane(lane?.id)}
-                className="w-full bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg p-3 sm:p-4 transition-all text-left"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 sm:p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-1 sm:mb-2">
-                      <h4 className="text-sm sm:text-base font-semibold text-gray-900">Lane {lane?.id}</h4>
-                      <p className="text-base sm:text-lg font-bold text-gray-900">
+                      <h4 className="text-sm sm:text-base font-semibold text-slate-900">Lane {lane?.id}</h4>
+                      <p className="text-base sm:text-lg font-bold text-slate-900">
                         ${lane?.ratePerMile?.toFixed(2)}/mile
                       </p>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-slate-600">
                       {lane?.miles} miles • {lane?.loadsAvailable} loads available
                     </p>
                   </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>

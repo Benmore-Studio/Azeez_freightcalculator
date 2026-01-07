@@ -100,14 +100,8 @@ export default function Step5Review({ data, onPrevious, onComplete, isSaving = f
                 <span className="font-medium text-gray-900">
                   {data.costData?.radio === "default"
                     ? "Industry Averages"
-                    : "Custom Data"}
+                    : "Custom (set in Profile)"}
                 </span>
-              </div>
-              <div className="flex justify-between pt-2 border-t border-blue-300">
-                <span className="text-gray-700 font-semibold">
-                  Estimated Cost/Mile:
-                </span>
-                <span className="font-bold text-blue-700 text-lg">$1.75</span>
               </div>
             </div>
           </div>

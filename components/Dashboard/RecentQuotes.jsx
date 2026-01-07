@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FaMapMarkerAlt, FaArrowRight, FaChartLine } from "react-icons/fa";
 import { Card, Button, Spinner } from "@/components/ui";
 import { quotesApi } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 export default function RecentQuotes() {
+  const router = useRouter();
   const [recentQuotes, setRecentQuotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,9 +36,14 @@ export default function RecentQuotes() {
       setRecentQuotes(transformed);
     } catch (error) {
       console.error("Failed to load recent quotes:", error);
+      showToast.error("Failed to load recent quotes");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleQuoteClick = (quoteId) => {
+    router.push(`/quotes?id=${quoteId}`);
   };
 
   const getProfitColor = (margin) => {
@@ -74,7 +82,8 @@ export default function RecentQuotes() {
           recentQuotes.map((quote) => (
             <div
               key={quote.id}
-              className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer"
+              onClick={() => handleQuoteClick(quote.id)}
+              className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-200 hover:shadow-md transition-all duration-200 cursor-pointer"
             >
               <div className="flex items-start justify-between">
                 {/* Route Info */}

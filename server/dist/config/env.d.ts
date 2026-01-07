@@ -24,6 +24,9 @@ export declare const env: {
         readonly weather: string | undefined;
         readonly eia: string | undefined;
         readonly toll: string | undefined;
+        readonly googleMaps: string | undefined;
+        readonly pcmiler: string | undefined;
+        readonly fmcsa: string | undefined;
     };
 };
 export type Env = typeof env;

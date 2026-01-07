@@ -87,6 +87,71 @@ export async function calculateRate(req: AuthenticatedRequest, res: Response, ne
   }
 }
 
+// Validation schema for enriched rate calculation (addresses instead of miles)
+const calculateEnrichedRateSchema = z.object({
+  // Route - just addresses, API will calculate miles
+  origin: z.string().min(1, 'Origin address is required'),
+  destination: z.string().min(1, 'Destination address is required'),
+  deadheadMiles: z.number().int().min(0).optional(),
+
+  // Vehicle
+  vehicleId: z.string().uuid().optional(),
+  vehicleType: vehicleTypeEnum,
+
+  // Load details
+  loadWeight: z.number().int().positive().optional(),
+  loadType: loadTypeEnum.optional(),
+  freightClass: freightClassEnum.optional(),
+  commodityType: z.string().max(100).optional(),
+
+  // Service options
+  isExpedite: z.boolean().optional(),
+  isTeam: z.boolean().optional(),
+  isReefer: z.boolean().optional(),
+  isRush: z.boolean().optional(),
+  isSameDay: z.boolean().optional(),
+  requiresLiftgate: z.boolean().optional(),
+  requiresPalletJack: z.boolean().optional(),
+  requiresDriverAssist: z.boolean().optional(),
+  requiresWhiteGlove: z.boolean().optional(),
+  requiresTracking: z.boolean().optional(),
+
+  // Distribution Center options
+  isDCPickup: z.boolean().optional(),
+  isDCDelivery: z.boolean().optional(),
+
+  // Conditions (optional - will auto-fetch if not provided)
+  weatherCondition: weatherConditionEnum.optional(),
+  season: z.string().optional(),
+  fuelPriceOverride: z.number().positive().optional(),
+
+  // Schedule (used for weather forecast)
+  deliveryDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+});
+
+/**
+ * Calculate enriched rate with auto-fetched distance, weather, and tolls
+ * POST /api/quotes/calculate-enriched
+ */
+export async function calculateEnrichedRate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    const validatedData = calculateEnrichedRateSchema.parse(req.body);
+    const result = await quoteService.previewEnrichedRate(userId, validatedData as any);
+
+    return sendSuccess(res, result, 'Enriched rate calculated successfully');
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return next(new ApiError(400, 'Validation error: ' + error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')));
+    }
+    next(error);
+  }
+}
+
 /**
  * Create and save a quote
  * POST /api/quotes

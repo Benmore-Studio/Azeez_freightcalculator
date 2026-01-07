@@ -116,7 +116,9 @@ export default function QuickQuotePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Centered form container - narrower for focused form experience */}
+        <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -358,6 +360,7 @@ export default function QuickQuotePage() {
             Use Full Calculator
           </button>
         </p>
+        </div>
       </div>
     </div>
   );

@@ -38,6 +38,8 @@ const envSchema = z.object({
   EIA_API_KEY: z.string().optional(),
   TOLL_API_KEY: z.string().optional(),
   GOOGLE_MAPS_API_KEY: z.string().optional(),
+  PCMILER_API_KEY: z.string().optional(),
+  FMCSA_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -80,6 +82,8 @@ export const env = {
     eia: parsed.data.EIA_API_KEY,
     toll: parsed.data.TOLL_API_KEY,
     googleMaps: parsed.data.GOOGLE_MAPS_API_KEY,
+    pcmiler: parsed.data.PCMILER_API_KEY,
+    fmcsa: parsed.data.FMCSA_API_KEY,
   },
 } as const;
 

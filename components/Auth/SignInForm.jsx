@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { FaEnvelope, FaLock } from "react-icons/fa";
-import { Input, Button, Card, Checkbox } from "@/components/ui";
+import { Input, Button, Card, Checkbox, Spinner } from "@/components/ui";
 import { showToast } from "@/lib/toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -108,19 +108,13 @@ export default function SignInForm() {
             error={errors.password}
           />
 
-          {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between">
+          {/* Remember Me */}
+          <div className="flex items-center">
             <Checkbox
               label="Remember me"
               checked={formData.rememberMe}
               onChange={(e) => handleInputChange("rememberMe", e.target.checked)}
             />
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm text-blue-600 hover:underline font-medium"
-            >
-              Forgot Password?
-            </Link>
           </div>
 
           {/* Submit Button */}
@@ -129,6 +123,8 @@ export default function SignInForm() {
             size="lg"
             disabled={isSubmitting}
             className="w-full"
+            icon={isSubmitting ? <Spinner size="sm" /> : null}
+            iconPosition="left"
           >
             {isSubmitting ? "Signing In..." : "Sign In"}
           </Button>

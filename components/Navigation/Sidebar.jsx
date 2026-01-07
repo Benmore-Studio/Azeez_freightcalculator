@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Calculator,
-  Zap,
   FileText,
   Truck,
   Trophy,
@@ -37,8 +36,7 @@ export default function Sidebar({ className = "" }) {
 
   const navigationItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/quick-quote", icon: Zap, label: "Quick Quote" },
-    { href: "/rate-calculator", icon: Calculator, label: "Full Calculator" },
+    { href: "/rate-calculator", icon: Calculator, label: "Calculator" },
     { href: "/quotes", icon: FileText, label: "Quotes" },
     { href: "/vehicles", icon: Truck, label: "Vehicles" },
     { href: "/rewards", icon: Trophy, label: "Rewards" },
@@ -116,7 +114,7 @@ export default function Sidebar({ className = "" }) {
         <>
           {/* Backdrop */}
           <div
-            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="lg:hidden fixed inset-0 bg-gray-900/30 backdrop-blur-sm z-40"
             onClick={() => setIsMobileOpen(false)}
           />
 

@@ -23,6 +23,7 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "pdf-lib": "^1.17.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -32,5 +32,17 @@ router.get('/me', authenticate, authController.me);
  * @access  Protected
  */
 router.post('/logout', authenticate, authController.logout);
+/**
+ * @route   DELETE /api/auth/account
+ * @desc    Delete user account (soft delete)
+ * @access  Protected
+ */
+router.delete('/account', authenticate, authController.deleteAccount);
+/**
+ * @route   PUT /api/auth/profile
+ * @desc    Update user profile (name, phone, company)
+ * @access  Protected
+ */
+router.put('/profile', authenticate, authController.updateProfile);
 export default router;
 //# sourceMappingURL=auth.routes.js.map

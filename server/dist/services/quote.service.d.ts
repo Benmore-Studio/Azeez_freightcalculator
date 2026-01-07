@@ -1,4 +1,4 @@
-import { type RateCalculationInput, type RateCalculationResult } from './rate.service.js';
+import { type RateCalculationInput, type RateCalculationResult, type EnrichedRateInput, type EnrichedRateResult } from './rate.service.js';
 import type { QuoteStatus } from '../../../lib/generated/prisma/index.js';
 export interface CreateQuoteInput extends RateCalculationInput {
     statesCrossed?: string[];
@@ -400,6 +400,10 @@ export declare function deleteQuote(userId: string, quoteId: string): Promise<{
  * Calculate rate without saving (preview)
  */
 export declare function previewRate(userId: string, input: RateCalculationInput): Promise<RateCalculationResult>;
+/**
+ * Calculate enriched rate with auto-fetched distance, weather, and tolls (preview)
+ */
+export declare function previewEnrichedRate(userId: string, input: EnrichedRateInput): Promise<EnrichedRateResult>;
 /**
  * Get recent quotes for dashboard
  */

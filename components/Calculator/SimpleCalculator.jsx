@@ -6,6 +6,7 @@ import { LuWeight } from "react-icons/lu";
 import { TbTruckDelivery } from "react-icons/tb";
 import { FaCalculator, FaInfoCircle } from "react-icons/fa";
 import { Input, Select, Button, Card } from "@/components/ui";
+import { showToast } from "@/lib/toast";
 import Link from "next/link";
 
 export default function SimpleCalculator() {
@@ -29,7 +30,7 @@ export default function SimpleCalculator() {
   const handleCalculate = () => {
     // Validation
     if (!formData.origin || !formData.destination || !formData.weight || !formData.equipment) {
-      alert("Please fill in all fields");
+      showToast.error("Please fill in all fields");
       return;
     }
 
@@ -86,12 +87,12 @@ export default function SimpleCalculator() {
     <div className="w-full max-w-4xl mx-auto">
       <Card variant="elevated" className="overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6">
+        <div className="bg-blue-600 p-6">
           <div className="flex items-center gap-3 mb-2">
             <FaCalculator className="text-white text-2xl" />
             <h2 className="text-2xl font-bold text-white">Quick Rate Calculator</h2>
           </div>
-          <p className="text-blue-50 text-sm">
+          <p className="text-blue-100 text-sm">
             Get an instant ballpark estimate in seconds - no signup required
           </p>
         </div>
@@ -148,14 +149,14 @@ export default function SimpleCalculator() {
           </div>
 
           {/* Disclaimer */}
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+          <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-md">
             <div className="flex gap-3">
-              <FaInfoCircle className="text-yellow-600 mt-0.5 flex-shrink-0" />
+              <FaInfoCircle className="text-orange-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-yellow-800">
-                  ⚠️ Estimate based on industry averages
+                <p className="text-sm font-semibold text-orange-800">
+                  Estimate based on industry averages
                 </p>
-                <p className="text-xs text-yellow-700 mt-1">
+                <p className="text-xs text-orange-700 mt-1">
                   This is a ballpark estimate using industry-standard rates. For accurate rates based
                   on YOUR specific costs, vehicle details, and operating expenses, please create a free account.
                 </p>

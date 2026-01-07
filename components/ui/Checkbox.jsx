@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 export default function Checkbox({
   label,
   checked,
@@ -9,7 +11,7 @@ export default function Checkbox({
   className = "",
   ...props
 }) {
-  const checkboxId = `checkbox-${Math.random().toString(36).substr(2, 9)}`;
+  const checkboxId = useId();
 
   return (
     <div className="flex items-start gap-3">

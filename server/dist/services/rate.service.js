@@ -1,4 +1,18 @@
 import { prisma } from './prisma.js';
+import { ApiError } from '../utils/ApiError.js';
+import { getRouteDetails, geocodeAddress } from './distance.service.js';
+import { getRouteWeather } from './weather.service.js';
+import { calculateTolls, estimateTollsFallback, FREIGHT_VEHICLE_MAP } from './toll.service.js';
+import { calculateMarketRate } from './market.service.js';
+import { getFuelPriceForState } from './fuel.service.js';
+// Map VehicleType to VehicleSpecs vehicleType
+const VEHICLE_TYPE_TO_SPECS = {
+    semi: 'semi_truck',
+    box_truck: 'box_truck',
+    cargo_van: 'cargo_van',
+    sprinter: 'sprinter_van',
+    reefer: 'semi_truck', // Reefer uses semi truck routing
+};
 // National average diesel price (fallback)
 const DEFAULT_DIESEL_PRICE = 4.00;
 // Base rates per mile by vehicle type
@@ -42,6 +56,267 @@ const FREIGHT_CLASS_MULTIPLIERS = {
     hazmat: 1.50,
     tanker: 1.25,
 };
+// Seasonal multipliers (based on trucking industry demand patterns)
+const SEASONAL_MULTIPLIERS = {
+    spring: 1.0,
+    summer: 1.05, // Increased demand for produce, construction
+    fall: 1.0,
+    winter: 1.15, // Weather challenges, holiday freight surge
+};
+// Default DC (Distribution Center) fees
+const DEFAULT_DC_FEE = 75;
+// Hotel cost per night for multi-day trips (HOS compliance)
+const HOTEL_COST_PER_NIGHT = 150;
+// Max driving hours per day (HOS regulations)
+const MAX_DRIVING_HOURS_PER_DAY = 11;
+/**
+ * Calculate enriched freight rate with auto-fetched distance, weather, and tolls
+ */
+export async function calculateEnrichedRate(userId, input) {
+    console.log('[EnrichedRate] Starting calculation for route:', input.origin, '->', input.destination);
+    // Build vehicle specs for truck-legal routing
+    const vehicleSpecsType = VEHICLE_TYPE_TO_SPECS[input.vehicleType] || 'semi_truck';
+    const vehicleSpecs = {
+        vehicleType: vehicleSpecsType,
+        heightInches: input.vehicleHeightInches,
+        weightLbs: input.vehicleWeightLbs,
+        lengthFeet: input.vehicleLengthFeet,
+        axles: input.vehicleAxles,
+        hazmat: input.isHazmat || input.freightClass === 'hazmat',
+        hazmatType: input.hazmatType,
+    };
+    console.log('[EnrichedRate] Using vehicle specs:', vehicleSpecsType, 'hazmat:', vehicleSpecs.hazmat);
+    // Step 1: Get route details (distance, coordinates, states crossed)
+    let routeData;
+    const routeDetails = await getRouteDetails(input.origin, input.destination, vehicleSpecs);
+    if (routeDetails) {
+        const provider = routeDetails.distance.routingProvider || 'google';
+        console.log('[EnrichedRate] Route API returned:', routeDetails.distance.distanceMiles, 'miles via', provider);
+        routeData = {
+            calculatedMiles: routeDetails.distance.distanceMiles,
+            calculatedDuration: routeDetails.distance.durationHours,
+            originFormatted: routeDetails.distance.originFormatted,
+            destinationFormatted: routeDetails.distance.destinationFormatted,
+            originLat: routeDetails.distance.originLat,
+            originLng: routeDetails.distance.originLng,
+            destinationLat: routeDetails.distance.destinationLat,
+            destinationLng: routeDetails.distance.destinationLng,
+            statesCrossed: routeDetails.statesCrossed,
+            milesSource: 'api',
+            isTruckRoute: routeDetails.distance.isTruckRoute || false,
+            routingProvider: provider,
+        };
+    }
+    else {
+        // Fallback: try to geocode and estimate
+        console.log('[EnrichedRate] Route API failed, trying geocode fallback');
+        const [originGeo, destGeo] = await Promise.all([
+            geocodeAddress(input.origin),
+            geocodeAddress(input.destination),
+        ]);
+        if (originGeo && destGeo) {
+            // Haversine distance estimate
+            const R = 3959;
+            const dLat = (destGeo.lat - originGeo.lat) * Math.PI / 180;
+            const dLng = (destGeo.lng - originGeo.lng) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(originGeo.lat * Math.PI / 180) * Math.cos(destGeo.lat * Math.PI / 180) *
+                    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const straightLine = R * c;
+            const estimatedMiles = Math.round(straightLine * 1.3); // Add 30% for roads
+            routeData = {
+                calculatedMiles: estimatedMiles,
+                calculatedDuration: estimatedMiles / 50, // Assume 50mph average
+                originFormatted: originGeo.formatted,
+                destinationFormatted: destGeo.formatted,
+                originLat: originGeo.lat,
+                originLng: originGeo.lng,
+                destinationLat: destGeo.lat,
+                destinationLng: destGeo.lng,
+                statesCrossed: [originGeo.state, destGeo.state].filter(Boolean),
+                milesSource: 'fallback',
+                isTruckRoute: false, // Fallback doesn't account for truck restrictions
+                routingProvider: 'fallback',
+            };
+            console.warn('[EnrichedRate] Using fallback routing - route may not be truck-legal');
+        }
+        else {
+            throw new ApiError(400, 'Could not calculate route. Please check addresses.');
+        }
+    }
+    // Step 2: Get weather data
+    let weatherData;
+    let weatherConditionToUse = input.weatherCondition || 'normal';
+    if (routeData.originLat && routeData.originLng && routeData.destinationLat && routeData.destinationLng) {
+        console.log('[EnrichedRate] Fetching weather data...');
+        const weather = await getRouteWeather(routeData.originLat, routeData.originLng, routeData.destinationLat, routeData.destinationLng, input.deliveryDate);
+        if (weather) {
+            weatherConditionToUse = input.weatherCondition || weather.routeCondition;
+            weatherData = {
+                origin: weather.origin ? {
+                    condition: weather.origin.condition,
+                    description: weather.origin.description,
+                    temperature: weather.origin.temperature,
+                    windSpeed: weather.origin.windSpeed,
+                    precipitation: weather.origin.precipitation,
+                } : null,
+                destination: weather.destination ? {
+                    condition: weather.destination.condition,
+                    description: weather.destination.description,
+                    temperature: weather.destination.temperature,
+                    windSpeed: weather.destination.windSpeed,
+                    precipitation: weather.destination.precipitation,
+                } : null,
+                routeCondition: weather.routeCondition,
+                riskLevel: weather.riskLevel,
+                advisories: weather.advisories,
+                weatherSource: input.weatherCondition ? 'user_input' : 'api',
+            };
+            console.log('[EnrichedRate] Weather condition:', weather.routeCondition, 'Risk:', weather.riskLevel);
+        }
+        else {
+            weatherData = {
+                origin: null,
+                destination: null,
+                routeCondition: weatherConditionToUse,
+                riskLevel: 'low',
+                advisories: [],
+                weatherSource: input.weatherCondition ? 'user_input' : 'default',
+            };
+        }
+    }
+    else {
+        weatherData = {
+            origin: null,
+            destination: null,
+            routeCondition: weatherConditionToUse,
+            riskLevel: 'low',
+            advisories: [],
+            weatherSource: input.weatherCondition ? 'user_input' : 'default',
+        };
+    }
+    // Step 3: Calculate tolls
+    let tollData;
+    if (routeData.originLat && routeData.originLng && routeData.destinationLat && routeData.destinationLng) {
+        console.log('[EnrichedRate] Calculating tolls...');
+        const vehicleClass = FREIGHT_VEHICLE_MAP[input.vehicleType] || '5axle';
+        const tolls = await calculateTolls({
+            originLat: routeData.originLat,
+            originLng: routeData.originLng,
+            destLat: routeData.destinationLat,
+            destLng: routeData.destinationLng,
+            vehicleType: vehicleClass,
+        });
+        if (tolls) {
+            tollData = {
+                totalTolls: tolls.totalTolls,
+                tollsByState: tolls.tollsByState,
+                cashTolls: tolls.cashTolls,
+                transponderTolls: tolls.transponderTolls,
+                tollCount: tolls.tollCount,
+                tollSource: 'api',
+            };
+            console.log('[EnrichedRate] Tolls calculated:', tolls.totalTolls);
+        }
+        else {
+            // Use fallback estimation
+            const fallbackTolls = estimateTollsFallback(routeData.calculatedMiles, routeData.statesCrossed);
+            tollData = {
+                totalTolls: fallbackTolls.totalTolls,
+                tollsByState: fallbackTolls.tollsByState,
+                cashTolls: fallbackTolls.cashTolls,
+                transponderTolls: fallbackTolls.transponderTolls,
+                tollCount: fallbackTolls.tollCount,
+                tollSource: 'estimate',
+            };
+        }
+    }
+    else {
+        tollData = {
+            totalTolls: 0,
+            tollsByState: {},
+            cashTolls: 0,
+            transponderTolls: 0,
+            tollCount: 0,
+            tollSource: 'none',
+        };
+    }
+    // Step 4: Build input for core rate calculation
+    const originState = routeData.statesCrossed[0] || undefined;
+    const coreInput = {
+        originAddress: routeData.originFormatted,
+        originState,
+        destinationAddress: routeData.destinationFormatted,
+        destinationState: routeData.statesCrossed[routeData.statesCrossed.length - 1],
+        totalMiles: routeData.calculatedMiles,
+        deadheadMiles: input.deadheadMiles,
+        vehicleId: input.vehicleId,
+        vehicleType: input.vehicleType,
+        loadWeight: input.loadWeight,
+        loadType: input.loadType,
+        freightClass: input.freightClass,
+        commodityType: input.commodityType,
+        isExpedite: input.isExpedite,
+        isTeam: input.isTeam,
+        isReefer: input.isReefer,
+        isRush: input.isRush,
+        isSameDay: input.isSameDay,
+        requiresLiftgate: input.requiresLiftgate,
+        requiresPalletJack: input.requiresPalletJack,
+        requiresDriverAssist: input.requiresDriverAssist,
+        requiresWhiteGlove: input.requiresWhiteGlove,
+        requiresTracking: input.requiresTracking,
+        isDCPickup: input.isDCPickup,
+        isDCDelivery: input.isDCDelivery,
+        weatherCondition: weatherConditionToUse,
+        season: input.season,
+        fuelPriceOverride: input.fuelPriceOverride,
+        deliveryDate: input.deliveryDate,
+    };
+    // Step 5: Calculate core rate
+    const coreResult = await calculateRate(userId, coreInput);
+    // Step 5.5: Calculate market rate benchmarks
+    const marketOriginState = routeData.statesCrossed[0] || '';
+    const marketDestState = routeData.statesCrossed[routeData.statesCrossed.length - 1] || '';
+    const marketData = await calculateMarketRate({
+        originState: marketOriginState,
+        destinationState: marketDestState,
+        originCity: input.origin,
+        destinationCity: input.destination,
+        totalMiles: routeData.calculatedMiles,
+        vehicleType: input.vehicleType,
+        freightClass: input.freightClass,
+        pickupDate: input.deliveryDate,
+    });
+    console.log('[EnrichedRate] Market data calculated:', {
+        marketMid: marketData.marketMid,
+        confidence: marketData.confidence,
+        flowDirection: marketData.supplyDemand.flowDirection,
+    });
+    // Step 6: Add tolls to the cost breakdown
+    const totalCostWithTolls = coreResult.costBreakdown.totalCost + tollData.totalTolls;
+    const adjustedRecommendedRate = coreResult.recommendedRate + Math.round(tollData.totalTolls);
+    // Step 7: Build enriched result
+    const enrichedResult = {
+        ...coreResult,
+        // Adjust rates to include tolls
+        recommendedRate: adjustedRecommendedRate,
+        minRate: Math.round(adjustedRecommendedRate * 0.85),
+        maxRate: Math.round(adjustedRecommendedRate * 1.20),
+        costBreakdown: {
+            ...coreResult.costBreakdown,
+            totalCost: Math.round(totalCostWithTolls * 100) / 100,
+        },
+        // Add enriched data
+        routeData,
+        weatherData,
+        tollData,
+        marketData,
+    };
+    console.log('[EnrichedRate] Calculation complete. Recommended rate:', enrichedResult.recommendedRate, 'Market mid:', marketData.totalMid);
+    return enrichedResult;
+}
 /**
  * Calculate freight rate based on inputs and user settings
  */
@@ -78,6 +353,11 @@ export async function calculateRate(userId, input) {
     const fuelCost = fuelCostPerMile * totalMiles;
     const maintenanceCost = maintenanceCpm * totalMiles;
     const tireCost = tireCpm * totalMiles;
+    // DEF (Diesel Exhaust Fluid) cost - vehicles consume ~1 gallon per 400 miles
+    const defPricePerGallon = userSettings?.defPricePerGallon
+        ? Number(userSettings.defPricePerGallon)
+        : 3.50;
+    const defCost = (totalMiles / 400) * defPricePerGallon;
     // Fixed cost allocation (per mile based on annual miles)
     const annualMiles = userSettings?.annualMiles || 100000;
     const annualInsurance = userSettings?.annualInsurance ? Number(userSettings.annualInsurance) : 12000;
@@ -89,32 +369,52 @@ export async function calculateRate(userId, input) {
     const fixedCostAllocation = fixedCostPerMile * totalMiles;
     // Calculate service fees
     const serviceFees = calculateServiceFees(input, userSettings);
+    // DC (Distribution Center) fees - $75 per DC stop
+    const dcFees = (input.isDCPickup ? DEFAULT_DC_FEE : 0) + (input.isDCDelivery ? DEFAULT_DC_FEE : 0);
+    // Hotel cost estimation for multi-day trips (HOS compliance)
+    // Drivers can only drive 11 hours per day, trips longer require overnight stays
+    const estimatedDriveHours = totalMiles / 50; // avg 50mph with stops
+    const overnightStays = Math.floor(estimatedDriveHours / MAX_DRIVING_HOURS_PER_DAY);
+    const hotelCost = overnightStays * HOTEL_COST_PER_NIGHT;
     // Total operating cost
-    const totalCost = fuelCost + maintenanceCost + tireCost + fixedCostAllocation + serviceFees.total;
+    const totalCost = fuelCost + defCost + maintenanceCost + tireCost + fixedCostAllocation + dcFees + hotelCost + serviceFees.total;
     const costPerMile = totalCost / totalMiles;
     // Get multipliers
     const weatherMultiplier = WEATHER_MULTIPLIERS[input.weatherCondition || 'normal'];
     const loadTypeMultiplier = LOAD_TYPE_MULTIPLIERS[input.loadType || 'full_truckload'];
     const freightClassMultiplier = FREIGHT_CLASS_MULTIPLIERS[input.freightClass || 'dry_van'];
+    // Weight adjustment multiplier - loads over 10,000 lbs incur additional cost
+    // Formula: 1.0 + (weight - 10000) * 0.00002 for weights over 10k
+    const loadWeight = input.loadWeight || 0;
+    const weightMultiplier = loadWeight > 10000
+        ? 1.0 + (loadWeight - 10000) * 0.00002
+        : 1.0;
+    // Seasonal multiplier - based on industry demand patterns
+    const season = (input.season || 'fall').toLowerCase();
+    const seasonalMultiplier = SEASONAL_MULTIPLIERS[season] || 1.0;
     // Service multipliers from user settings
     const serviceMultiplier = calculateServiceMultiplier(input, userSettings);
-    const totalMultiplier = weatherMultiplier * loadTypeMultiplier * freightClassMultiplier * serviceMultiplier;
+    const totalMultiplier = weatherMultiplier * loadTypeMultiplier * freightClassMultiplier * weightMultiplier * seasonalMultiplier * serviceMultiplier;
     // Calculate rates
     const baseRate = BASE_RATES[vehicleType];
     const profitMarginRate = userSettings?.profitMargin ? Number(userSettings.profitMargin) : 0.15;
     // Rate per mile with margin
     const targetRatePerMile = (costPerMile / (1 - profitMarginRate)) * totalMultiplier;
     const ratePerMile = Math.max(targetRatePerMile, baseRate * totalMultiplier);
-    // Final rates
-    const recommendedRate = Math.round(ratePerMile * totalMiles);
+    // Pre-factoring rates
+    const preFactoringRate = Math.round(ratePerMile * totalMiles);
+    // Apply factoring fee to final rate (factoring companies charge 2-5% of invoice)
+    const factoringRate = userSettings?.factoringRate ? Number(userSettings.factoringRate) : 0.03;
+    const factoringFee = Math.round(preFactoringRate * factoringRate);
+    // Final rates (factoring fee added to cover the cost of quick payment)
+    const recommendedRate = preFactoringRate + factoringFee;
     const minRate = Math.round(recommendedRate * 0.85);
     const maxRate = Math.round(recommendedRate * 1.20);
-    // Profit calculations
-    const estimatedProfit = recommendedRate - totalCost;
+    // Profit calculations (factoring is a cost, so subtract from profit)
+    const totalCostWithFactoring = totalCost + factoringFee;
+    const estimatedProfit = recommendedRate - totalCostWithFactoring;
     const profitPerMile = estimatedProfit / totalMiles;
     const actualProfitMargin = estimatedProfit / recommendedRate;
-    // Estimate drive time (avg 50mph with stops)
-    const estimatedDriveHours = totalMiles / 50;
     // Fuel calculations
     const estimatedGallons = totalMiles / mpg;
     return {
@@ -125,11 +425,15 @@ export async function calculateRate(userId, input) {
         costPerMile: Math.round(costPerMile * 100) / 100,
         costBreakdown: {
             fuelCost: Math.round(fuelCost * 100) / 100,
+            defCost: Math.round(defCost * 100) / 100,
             maintenanceCost: Math.round(maintenanceCost * 100) / 100,
             tireCost: Math.round(tireCost * 100) / 100,
             fixedCostAllocation: Math.round(fixedCostAllocation * 100) / 100,
+            dcFees: Math.round(dcFees * 100) / 100,
+            hotelCost: Math.round(hotelCost * 100) / 100,
             serviceFees: serviceFees.total,
-            totalCost: Math.round(totalCost * 100) / 100,
+            factoringFee: Math.round(factoringFee * 100) / 100,
+            totalCost: Math.round(totalCostWithFactoring * 100) / 100,
         },
         serviceFees,
         profitMargin: Math.round(actualProfitMargin * 100) / 100,
@@ -144,6 +448,8 @@ export async function calculateRate(userId, input) {
             loadType: loadTypeMultiplier,
             freightClass: freightClassMultiplier,
             services: serviceMultiplier,
+            weight: Math.round(weightMultiplier * 1000) / 1000,
+            seasonal: seasonalMultiplier,
             total: Math.round(totalMultiplier * 100) / 100,
         },
         fuelPriceUsed: fuelPrice,
@@ -220,27 +526,19 @@ function calculateServiceMultiplier(input, userSettings) {
     return multiplier;
 }
 /**
- * Get fuel price for a state (from cache or default)
+ * Get fuel price for a state (uses EIA API via fuel.service.ts)
  */
 async function getFuelPrice(stateCode) {
     if (!stateCode)
         return null;
     try {
-        const cached = await prisma.fuelPriceCache.findFirst({
-            where: {
-                stateCode: stateCode.toUpperCase(),
-                fuelType: 'diesel',
-                expiresAt: { gt: new Date() },
-            },
-            orderBy: { fetchedAt: 'desc' },
-        });
-        if (cached) {
-            return Number(cached.pricePerGallon);
-        }
+        const result = await getFuelPriceForState(stateCode);
+        console.log(`[RateService] Fuel price for ${stateCode}: $${result.pricePerGallon}/gal (source: ${result.source})`);
+        return result.pricePerGallon;
     }
     catch (error) {
         console.error('Error fetching fuel price:', error);
+        return null;
     }
-    return null;
 }
 //# sourceMappingURL=rate.service.js.map

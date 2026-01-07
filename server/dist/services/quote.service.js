@@ -1,6 +1,6 @@
 import { prisma } from './prisma.js';
 import { ApiError } from '../utils/ApiError.js';
-import { calculateRate } from './rate.service.js';
+import { calculateRate, calculateEnrichedRate } from './rate.service.js';
 /**
  * Create and calculate a new quote
  */
@@ -185,6 +185,12 @@ export async function deleteQuote(userId, quoteId) {
  */
 export async function previewRate(userId, input) {
     return calculateRate(userId, input);
+}
+/**
+ * Calculate enriched rate with auto-fetched distance, weather, and tolls (preview)
+ */
+export async function previewEnrichedRate(userId, input) {
+    return calculateEnrichedRate(userId, input);
 }
 /**
  * Get recent quotes for dashboard

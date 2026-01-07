@@ -188,8 +188,9 @@ export default function LoadAcceptanceScore({ scoreData }) {
         <div className="flex items-start gap-4">
           {colorStyle.icon}
           <div className="flex-1">
-            <h4 className={`text-xl font-bold ${colorStyle.text} mb-2`}>
-              {rating === 'EXCELLENT LOAD' || rating === 'GOOD LOAD' ? '✓' : '⚠'} Final Recommendation
+            <h4 className={`text-xl font-bold ${colorStyle.text} mb-2 flex items-center gap-2`}>
+              {rating === 'EXCELLENT LOAD' || rating === 'GOOD LOAD' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+              Final Recommendation
             </h4>
             <p className={`text-base font-medium ${colorStyle.text}`}>
               {recommendation}

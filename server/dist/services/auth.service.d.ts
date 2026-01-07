@@ -26,4 +26,12 @@ export declare function refreshAccessToken(refreshToken: string): Promise<{
     refreshToken: string;
 }>;
 export declare function getCurrentUser(userId: string): Promise<UserResponse>;
+export declare function deleteAccount(userId: string): Promise<void>;
+export interface UpdateProfileInput {
+    name?: string;
+    phone?: string;
+    companyName?: string;
+    onboardingCompleted?: boolean;
+}
+export declare function updateProfile(userId: string, input: UpdateProfileInput): Promise<UserResponse>;
 //# sourceMappingURL=auth.service.d.ts.map

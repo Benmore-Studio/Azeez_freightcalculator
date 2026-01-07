@@ -1,12 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Truck, UserCog, ClipboardList } from "lucide-react";
 import showToast from "@/lib/toast";
 import { Button } from "@/components/ui";
 
 export default function Step1UserType({ initialData, onNext }) {
   const [userType, setUserType] = useState(initialData.userType || "");
+
+  // Sync when initialData changes (e.g., from signup prefill)
+  useEffect(() => {
+    if (initialData.userType) {
+      setUserType(initialData.userType);
+    }
+  }, [initialData.userType]);
 
   const userTypes = [
     {

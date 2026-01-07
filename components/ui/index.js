@@ -10,3 +10,4 @@ export { default as ProgressHeader } from './ProgressHeader';
 export { default as BackButton } from './BackButton';
 export { default as Spinner } from './Spinner';
 export { default as Skeleton, SkeletonCard, SkeletonTable, SkeletonDashboard } from './Skeleton';
+export { default as CollapsibleSection } from './CollapsibleSection';

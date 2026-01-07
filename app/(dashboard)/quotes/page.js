@@ -1,19 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FaMapMarkerAlt, FaArrowRight, FaChartLine, FaSearch, FaFilter, FaDownload, FaTrash, FaArchive } from "react-icons/fa";
-import { Card, Button, Input, Spinner } from "@/components/ui";
+import { FaMapMarkerAlt, FaArrowRight, FaChartLine, FaSearch, FaDownload, FaTrash, FaArchive, FaBalanceScale } from "react-icons/fa";
+import { Card, Button, Input, Spinner, Checkbox } from "@/components/ui";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import QuoteComparison from "@/components/quote/QuoteComparison";
 import { showToast } from "@/lib/toast";
 import { quotesApi } from "@/lib/api";
 
 export default function QuotesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all"); // all, draft, sent, accepted, rejected, expired
+  const [filterStatus, setFilterStatus] = useState("all"); // all, active, archived
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, quoteId: null });
   const [allQuotes, setAllQuotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0 });
+
+  // Comparison mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
 
   useEffect(() => {
     loadQuotes();
@@ -68,28 +73,37 @@ export default function QuotesPage() {
 
   const getStatusLabel = (status) => {
     const labels = {
-      draft: "Draft",
-      sent: "Sent",
-      accepted: "Accepted",
-      rejected: "Rejected",
-      expired: "Expired",
+      draft: "Active",
+      active: "Active",
+      archived: "Archived",
+      expired: "Archived",
     };
-    return labels[status] || status;
+    return labels[status] || "Active";
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      draft: "bg-gray-100 text-gray-600",
-      sent: "bg-blue-100 text-blue-600",
-      accepted: "bg-green-100 text-green-600",
-      rejected: "bg-red-100 text-red-600",
-      expired: "bg-orange-100 text-orange-600",
+      draft: "bg-blue-100 text-blue-600",
+      active: "bg-blue-100 text-blue-600",
+      archived: "bg-gray-100 text-gray-600",
+      expired: "bg-gray-100 text-gray-600",
     };
-    return colors[status] || "bg-gray-100 text-gray-600";
+    return colors[status] || "bg-blue-100 text-blue-600";
   };
 
-  const handleExport = (quoteId) => {
-    showToast.info("PDF export coming in Phase 2");
+  const handleExport = async (quoteId) => {
+    try {
+      showToast.info("Generating PDF...");
+      await quotesApi.exportPDF(quoteId, {
+        includeWeather: true,
+        includeMarketIntel: true,
+        includeTolls: true,
+      });
+      showToast.success("PDF downloaded successfully");
+    } catch (error) {
+      console.error("Failed to export PDF:", error);
+      showToast.error("Failed to generate PDF");
+    }
   };
 
   const handleArchive = async (quoteId) => {
@@ -119,9 +133,31 @@ export default function QuotesPage() {
     }
   };
 
+  // Comparison handlers
+  const toggleCompareMode = () => {
+    setCompareMode(!compareMode);
+    if (compareMode) {
+      setSelectedForCompare([]); // Clear selections when exiting compare mode
+    }
+  };
+
+  const handleSelectForCompare = (quoteId) => {
+    if (selectedForCompare.includes(quoteId)) {
+      setSelectedForCompare(selectedForCompare.filter((id) => id !== quoteId));
+    } else if (selectedForCompare.length < 4) {
+      setSelectedForCompare([...selectedForCompare, quoteId]);
+    } else {
+      showToast.warning("Maximum 4 quotes can be compared at once");
+    }
+  };
+
+  const getSelectedQuotes = () => {
+    return filteredQuotes.filter((q) => selectedForCompare.includes(q.id));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
@@ -158,24 +194,28 @@ export default function QuotesPage() {
               </Button>
               <Button
                 size="sm"
-                variant={filterStatus === "draft" ? "primary" : "secondary"}
-                onClick={() => setFilterStatus("draft")}
+                variant={filterStatus === "active" ? "primary" : "secondary"}
+                onClick={() => setFilterStatus("active")}
               >
-                Draft
+                Active
               </Button>
               <Button
                 size="sm"
-                variant={filterStatus === "sent" ? "primary" : "secondary"}
-                onClick={() => setFilterStatus("sent")}
+                variant={filterStatus === "archived" ? "primary" : "secondary"}
+                onClick={() => setFilterStatus("archived")}
               >
-                Sent
+                Archived
               </Button>
+
+              {/* Compare Button */}
               <Button
                 size="sm"
-                variant={filterStatus === "accepted" ? "primary" : "secondary"}
-                onClick={() => setFilterStatus("accepted")}
+                variant={compareMode ? "primary" : "outline"}
+                onClick={toggleCompareMode}
+                className="ml-2"
               >
-                Accepted
+                <FaBalanceScale className="mr-1" size={14} />
+                {compareMode ? `Compare (${selectedForCompare.length})` : "Compare"}
               </Button>
             </div>
           </div>
@@ -207,9 +247,24 @@ export default function QuotesPage() {
             {filteredQuotes.map((quote) => (
               <Card
                 key={quote.id}
-                className="p-6 bg-white border-2 border-gray-200 hover:border-blue-200 hover:shadow-md transition-all"
+                className={`p-6 bg-white border-2 transition-all ${
+                  compareMode && selectedForCompare.includes(quote.id)
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-200 hover:shadow-md"
+                }`}
               >
                 <div className="flex items-start justify-between">
+                  {/* Compare Checkbox */}
+                  {compareMode && (
+                    <div className="mr-4 pt-1">
+                      <Checkbox
+                        checked={selectedForCompare.includes(quote.id)}
+                        onChange={() => handleSelectForCompare(quote.id)}
+                        className="w-5 h-5"
+                      />
+                    </div>
+                  )}
+
                   {/* Route Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
@@ -295,6 +350,28 @@ export default function QuotesPage() {
               </Card>
             ))}
           </div>
+        )}
+
+        {/* Comparison Panel */}
+        {compareMode && selectedForCompare.length >= 2 && (
+          <div className="mt-6">
+            <QuoteComparison
+              quotes={getSelectedQuotes()}
+              onClose={() => {
+                setCompareMode(false);
+                setSelectedForCompare([]);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Compare mode hint */}
+        {compareMode && selectedForCompare.length < 2 && (
+          <Card className="mt-4 p-4 bg-blue-50 border border-blue-200">
+            <p className="text-sm text-blue-700 text-center">
+              Select at least 2 quotes to compare (maximum 4)
+            </p>
+          </Card>
         )}
       </div>
 

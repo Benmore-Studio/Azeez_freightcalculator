@@ -15,9 +15,11 @@ import {
 } from "react-icons/fa";
 import { Card, Button, Input, Spinner } from "@/components/ui";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import PasswordChangeModal from "@/components/Profile/PasswordChangeModal";
 import { showToast } from "@/lib/toast";
-import { settingsApi } from "@/lib/api";
+import { settingsApi, authApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 // Collapsible Section Component
 function CollapsibleSection({ title, icon: Icon, iconColor = "text-blue-600", children, defaultOpen = false }) {
@@ -45,10 +47,14 @@ function CollapsibleSection({ title, icon: Icon, iconColor = "text-blue-600", ch
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
+  const router = useRouter();
   const [deleteAccountConfirm, setDeleteAccountConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
 
   // Profile data
   const [profileData, setProfileData] = useState({
@@ -135,9 +141,23 @@ export default function ProfilePage() {
     }
   };
 
-  const handleProfileSave = () => {
-    console.log("Save profile data:", profileData);
-    showToast.success("Profile saved successfully!");
+  const handleProfileSave = async () => {
+    setIsProfileSaving(true);
+    try {
+      await authApi.updateProfile({
+        name: profileData.name,
+        phone: profileData.phone,
+        companyName: profileData.company,
+      });
+      // Refresh user data in context
+      await refreshUser();
+      showToast.success("Profile saved successfully!");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      showToast.error(error.message || "Failed to save profile");
+    } finally {
+      setIsProfileSaving(false);
+    }
   };
 
   const handleSettingsSave = async () => {
@@ -165,16 +185,28 @@ export default function ProfilePage() {
   };
 
   const handlePasswordChange = () => {
-    showToast.info("Password change modal coming soon");
+    setPasswordModalOpen(true);
   };
 
   const handleDeleteAccount = () => {
     setDeleteAccountConfirm(true);
   };
 
-  const confirmDeleteAccount = () => {
-    console.log("Delete account - to be implemented");
-    showToast.success("Account deletion initiated");
+  const confirmDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await authApi.deleteAccount();
+      showToast.success("Account deleted successfully");
+      // Logout and redirect to home
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.error("Failed to delete account:", error);
+      showToast.error(error.message || "Failed to delete account");
+      setDeleteAccountConfirm(false);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const updateSetting = (key, value) => {
@@ -214,7 +246,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
@@ -233,8 +265,14 @@ export default function ProfilePage() {
                 <FaUser className="text-blue-600" />
                 Personal Information
               </h2>
-              <Button size="sm" onClick={handleProfileSave} icon={<FaSave />} iconPosition="left">
-                Save Changes
+              <Button
+                size="sm"
+                onClick={handleProfileSave}
+                icon={<FaSave />}
+                iconPosition="left"
+                disabled={isProfileSaving}
+              >
+                {isProfileSaving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
 
@@ -428,7 +466,7 @@ export default function ProfilePage() {
               </CollapsibleSection>
 
               {/* Service Multipliers */}
-              <CollapsibleSection title="Service Multipliers" icon={FaPercent} iconColor="text-purple-600">
+              <CollapsibleSection title="Service Multipliers" icon={FaPercent} iconColor="text-blue-600">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Express Multiplier</label>
@@ -548,7 +586,7 @@ export default function ProfilePage() {
               </CollapsibleSection>
 
               {/* Reefer Costs */}
-              <CollapsibleSection title="Reefer Costs" icon={FaSnowflake} iconColor="text-cyan-600">
+              <CollapsibleSection title="Reefer Costs" icon={FaSnowflake} iconColor="text-blue-600">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">DEF Price (per gallon)</label>
@@ -710,6 +748,13 @@ export default function ProfilePage() {
         confirmText="Delete My Account"
         cancelText="Cancel"
         variant="danger"
+        isLoading={isDeleting}
+      />
+
+      {/* Password Change Modal */}
+      <PasswordChangeModal
+        isOpen={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
       />
     </div>
   );

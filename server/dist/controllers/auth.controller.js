@@ -85,4 +85,39 @@ export async function logout(_req, res, next) {
         next(error);
     }
 }
+export async function deleteAccount(req, res, next) {
+    try {
+        if (!req.user) {
+            throw ApiError.unauthorized('Authentication required');
+        }
+        await authService.deleteAccount(req.user.userId);
+        sendSuccess(res, null, 'Account deleted successfully');
+    }
+    catch (error) {
+        next(error);
+    }
+}
+const updateProfileSchema = z.object({
+    name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+    phone: z.string().optional(),
+    companyName: z.string().optional(),
+    onboardingCompleted: z.boolean().optional(),
+});
+export async function updateProfile(req, res, next) {
+    try {
+        if (!req.user) {
+            throw ApiError.unauthorized('Authentication required');
+        }
+        const validatedData = updateProfileSchema.parse(req.body);
+        const user = await authService.updateProfile(req.user.userId, validatedData);
+        sendSuccess(res, { user }, 'Profile updated successfully');
+    }
+    catch (error) {
+        if (error instanceof z.ZodError) {
+            next(ApiError.badRequest('Validation error: ' + error.errors.map(e => e.message).join(', ')));
+            return;
+        }
+        next(error);
+    }
+}
 //# sourceMappingURL=auth.controller.js.map

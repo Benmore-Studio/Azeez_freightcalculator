@@ -5,6 +5,7 @@ import { FaGasPump, FaTools, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { Truck, Package, Star } from "lucide-react";
 import { Card, Button, Spinner } from "@/components/ui";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import VehicleModal from "@/components/Vehicles/VehicleModal";
 import { showToast } from "@/lib/toast";
 import { vehiclesApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -43,6 +44,7 @@ export default function VehiclesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, vehicleId: null });
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [modalState, setModalState] = useState({ isOpen: false, vehicle: null });
 
   // Fetch vehicles on mount
   useEffect(() => {
@@ -63,8 +65,10 @@ export default function VehiclesPage() {
   };
 
   const handleEdit = (vehicleId) => {
-    showToast.info("Edit modal coming soon");
-    // TODO: Open edit modal with vehicle data
+    const vehicleToEdit = vehicles.find((v) => v.id === vehicleId);
+    if (vehicleToEdit) {
+      setModalState({ isOpen: true, vehicle: vehicleToEdit });
+    }
   };
 
   const handleDelete = (vehicleId) => {
@@ -85,8 +89,15 @@ export default function VehiclesPage() {
   };
 
   const handleAddVehicle = () => {
-    showToast.info("Add vehicle modal coming soon");
-    // TODO: Open add vehicle modal
+    setModalState({ isOpen: true, vehicle: null });
+  };
+
+  const handleModalClose = () => {
+    setModalState({ isOpen: false, vehicle: null });
+  };
+
+  const handleModalSuccess = () => {
+    fetchVehicles(); // Refresh the list
   };
 
   const handleUseInCalculator = (vehicleId) => {
@@ -117,7 +128,7 @@ export default function VehiclesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -227,7 +238,7 @@ export default function VehiclesPage() {
 
                     {/* Equipment Tag */}
                     <div className="flex flex-wrap gap-1.5 pt-2">
-                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                         {equipmentTypeMap[vehicle.equipmentType] || vehicle.equipmentType}
                       </span>
                     </div>
@@ -264,6 +275,14 @@ export default function VehiclesPage() {
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
+      />
+
+      {/* Add/Edit Vehicle Modal */}
+      <VehicleModal
+        isOpen={modalState.isOpen}
+        onClose={handleModalClose}
+        vehicle={modalState.vehicle}
+        onSuccess={handleModalSuccess}
       />
     </div>
   );

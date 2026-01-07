@@ -6,6 +6,11 @@ import type { AuthenticatedRequest } from '../types/index.js';
  */
 export declare function calculateRate(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void | Response<any, Record<string, any>>>;
 /**
+ * Calculate enriched rate with auto-fetched distance, weather, and tolls
+ * POST /api/quotes/calculate-enriched
+ */
+export declare function calculateEnrichedRate(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void | Response<any, Record<string, any>>>;
+/**
  * Create and save a quote
  * POST /api/quotes
  */

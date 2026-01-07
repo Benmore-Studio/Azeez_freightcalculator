@@ -37,7 +37,7 @@ export default function Step3CostCalc({ initialData, onNext, onPrevious, onSkip 
             onClick={() =>
               setCostData((prev) => ({ ...prev, radio: "default" }))
             }
-            className={`p-4 border-2 rounded-lg text-left transition-all ${
+            className={`p-4 border-2 rounded-lg text-left transition-colors ${
               costData.radio === "default"
                 ? "border-blue-500 bg-blue-100"
                 : "border-gray-300 bg-white hover:border-gray-400"
@@ -56,7 +56,7 @@ export default function Step3CostCalc({ initialData, onNext, onPrevious, onSkip 
             onClick={() =>
               setCostData((prev) => ({ ...prev, radio: "unique" }))
             }
-            className={`p-4 border-2 rounded-lg text-left transition-all ${
+            className={`p-4 border-2 rounded-lg text-left transition-colors ${
               costData.radio === "unique"
                 ? "border-blue-500 bg-blue-100"
                 : "border-gray-300 bg-white hover:border-gray-400"
@@ -147,14 +147,12 @@ export default function Step3CostCalc({ initialData, onNext, onPrevious, onSkip 
         />
       </div>
 
-      {/* Estimated Cost Display */}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
-        <div className="flex justify-between items-center">
-          <h4 className="font-semibold text-gray-900">Estimated Cost Per Mile:</h4>
-          <p className="text-2xl font-bold text-blue-600">$1.75/mile</p>
-        </div>
-        <p className="text-sm text-gray-600 mt-2">
-          This is an estimate. You can update your exact costs from the dashboard later.
+      {/* Info Note */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <p className="text-sm text-gray-600">
+          {costData.radio === "default"
+            ? "We'll use industry average costs for your vehicle type when calculating rates."
+            : "You can enter your detailed operating costs from your Profile settings after setup."}
         </p>
       </div>
 

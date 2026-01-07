@@ -92,11 +92,6 @@ export default function QuickStats() {
         text: "text-green-600",
         border: "border-green-200",
       },
-      purple: {
-        bg: "bg-purple-100",
-        text: "text-purple-600",
-        border: "border-purple-200",
-      },
       orange: {
         bg: "bg-orange-100",
         text: "text-orange-600",

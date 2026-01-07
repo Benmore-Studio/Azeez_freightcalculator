@@ -1,20 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
-import { Truck, Users, ClipboardList, Check } from "lucide-react";
-import { Input, Button, Card } from "@/components/ui";
+import { Check, X } from "lucide-react";
+import { Input, Button, Card, Spinner, Select } from "@/components/ui";
 import { showToast } from "@/lib/toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import OnboardingModal from "@/components/Onboarding/OnboardingModal";
 
+// Password criteria check item component
+function PasswordCriteriaItem({ met, label }) {
+  return (
+    <div className={`flex items-center gap-1.5 text-xs ${met ? "text-green-600" : "text-gray-400"}`}>
+      {met ? (
+        <Check size={14} className="flex-shrink-0" />
+      ) : (
+        <X size={14} className="flex-shrink-0" />
+      )}
+      <span>{label}</span>
+    </div>
+  );
+}
+
 export default function SignUpForm() {
   const router = useRouter();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -25,11 +40,21 @@ export default function SignUpForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  const userTypes = [
-    { value: "owner-operator", label: "Owner Operator", icon: Truck },
-    { value: "fleet-manager", label: "Fleet Manager", icon: Users },
-    { value: "dispatcher", label: "Dispatcher", icon: ClipboardList },
+  const userTypeOptions = [
+    { value: "owner-operator", label: "Owner Operator" },
+    { value: "fleet-manager", label: "Fleet Manager" },
+    { value: "dispatcher", label: "Dispatcher" },
   ];
+
+  // Password criteria checks
+  const passwordCriteria = useMemo(() => ({
+    minLength: formData.password.length >= 8,
+    hasUppercase: /[A-Z]/.test(formData.password),
+    hasLowercase: /[a-z]/.test(formData.password),
+    hasNumber: /\d/.test(formData.password),
+  }), [formData.password]);
+
+  const allPasswordCriteriaMet = Object.values(passwordCriteria).every(Boolean);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -48,11 +73,14 @@ export default function SignUpForm() {
   const validateForm = () => {
     const newErrors = {};
 
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
+    // First name validation
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+
+    // Last name validation
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
     }
 
     // Email validation
@@ -65,10 +93,8 @@ export default function SignUpForm() {
     // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = "Password must contain uppercase, lowercase, and number";
+    } else if (!allPasswordCriteriaMet) {
+      newErrors.password = "Password does not meet all requirements";
     }
 
     // Confirm password validation
@@ -104,10 +130,12 @@ export default function SignUpForm() {
         "dispatcher": "dispatcher",
       };
 
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+
       await register({
         email: formData.email,
         password: formData.password,
-        name: formData.name,
+        name: fullName,
         userType: userTypeMap[formData.userType] || formData.userType,
       });
 
@@ -139,16 +167,26 @@ export default function SignUpForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Name */}
-          <Input
-            label="Full Name"
-            type="text"
-            placeholder="John Doe"
-            value={formData.name}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            icon={<FaUser />}
-            error={errors.name}
-          />
+          {/* Name Fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="First Name"
+              type="text"
+              placeholder="John"
+              value={formData.firstName}
+              onChange={(e) => handleInputChange("firstName", e.target.value)}
+              icon={<FaUser />}
+              error={errors.firstName}
+            />
+            <Input
+              label="Last Name"
+              type="text"
+              placeholder="Doe"
+              value={formData.lastName}
+              onChange={(e) => handleInputChange("lastName", e.target.value)}
+              error={errors.lastName}
+            />
+          </div>
 
           {/* Email */}
           <Input
@@ -162,16 +200,26 @@ export default function SignUpForm() {
           />
 
           {/* Password */}
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={(e) => handleInputChange("password", e.target.value)}
-            icon={<FaLock />}
-            error={errors.password}
-            helperText={!errors.password ? "Must be 8+ chars with uppercase, lowercase & number" : ""}
-          />
+          <div>
+            <Input
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={(e) => handleInputChange("password", e.target.value)}
+              icon={<FaLock />}
+              error={errors.password}
+            />
+            {/* Password Criteria Checklist */}
+            {formData.password.length > 0 && (
+              <div className="mt-2 grid grid-cols-2 gap-1">
+                <PasswordCriteriaItem met={passwordCriteria.minLength} label="8+ characters" />
+                <PasswordCriteriaItem met={passwordCriteria.hasUppercase} label="Uppercase letter" />
+                <PasswordCriteriaItem met={passwordCriteria.hasLowercase} label="Lowercase letter" />
+                <PasswordCriteriaItem met={passwordCriteria.hasNumber} label="Number" />
+              </div>
+            )}
+          </div>
 
           {/* Confirm Password */}
           <Input
@@ -185,46 +233,14 @@ export default function SignUpForm() {
           />
 
           {/* User Type Selection */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              I am a...
-            </label>
-            <div className="grid grid-cols-1 gap-3">
-              {userTypes.map((type) => {
-                const IconComponent = type.icon;
-                return (
-                  <button
-                    key={type.value}
-                    type="button"
-                    onClick={() => handleInputChange("userType", type.value)}
-                    className={`flex items-center gap-3 p-4 border-2 rounded-lg transition-all ${
-                      formData.userType === type.value
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
-                  >
-                    <div className={`p-2 rounded-lg ${
-                      formData.userType === type.value
-                        ? "bg-blue-100"
-                        : "bg-gray-100"
-                    }`}>
-                      <IconComponent
-                        size={20}
-                        className={formData.userType === type.value ? "text-blue-600" : "text-gray-600"}
-                      />
-                    </div>
-                    <span className="font-medium text-gray-900">{type.label}</span>
-                    {formData.userType === type.value && (
-                      <Check size={20} className="ml-auto text-blue-600" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {errors.userType && (
-              <p className="text-sm text-red-600 mt-2">{errors.userType}</p>
-            )}
-          </div>
+          <Select
+            label="I am a..."
+            placeholder="Select your role"
+            value={formData.userType}
+            onChange={(e) => handleInputChange("userType", e.target.value)}
+            options={userTypeOptions}
+            error={errors.userType}
+          />
 
           {/* Submit Button */}
           <Button
@@ -232,20 +248,15 @@ export default function SignUpForm() {
             size="lg"
             disabled={isSubmitting}
             className="w-full"
+            icon={isSubmitting ? <Spinner size="sm" /> : null}
+            iconPosition="left"
           >
             {isSubmitting ? "Creating Account..." : "Create Account"}
           </Button>
 
           {/* Terms */}
           <p className="text-xs text-gray-500 text-center">
-            By signing up, you agree to our{" "}
-            <a href="#" className="text-blue-600 hover:underline">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a href="#" className="text-blue-600 hover:underline">
-              Privacy Policy
-            </a>
+            By signing up, you agree to our Terms of Service and Privacy Policy.
           </p>
 
           {/* Sign In Link */}
@@ -265,7 +276,7 @@ export default function SignUpForm() {
         isOpen={showOnboarding}
         onClose={handleOnboardingClose}
         initialData={{
-          name: formData.name,
+          name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
           email: formData.email,
           userType: formData.userType,
         }}

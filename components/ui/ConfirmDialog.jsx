@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui";
 
 export default function ConfirmDialog({
@@ -13,16 +13,17 @@ export default function ConfirmDialog({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "danger", // danger, primary, warning
+  isLoading = false, // For async operations
 }) {
   if (!isOpen) return null;
 
   const handleConfirm = () => {
+    // Don't auto-close - let the parent handle it after async operation completes
     onConfirm();
-    onClose();
   };
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isLoading) {
       onClose();
     }
   };
@@ -31,7 +32,7 @@ export default function ConfirmDialog({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-gray-900/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         onClick={handleBackdropClick}
       >
         {/* Modal */}
@@ -44,7 +45,8 @@ export default function ConfirmDialog({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isLoading}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Close"
           >
             <X size={20} />
@@ -85,13 +87,14 @@ export default function ConfirmDialog({
 
               {/* Actions */}
               <div className="flex gap-3 justify-end">
-                <Button size="sm" variant="secondary" onClick={onClose}>
+                <Button size="sm" variant="secondary" onClick={onClose} disabled={isLoading}>
                   {cancelText}
                 </Button>
                 <Button
                   size="sm"
                   variant={variant}
                   onClick={handleConfirm}
+                  disabled={isLoading}
                   className={
                     variant === "danger"
                       ? "bg-red-600 hover:bg-red-700 text-white"
@@ -100,7 +103,14 @@ export default function ConfirmDialog({
                       : ""
                   }
                 >
-                  {confirmText}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="animate-spin mr-2" size={16} />
+                      Deleting...
+                    </>
+                  ) : (
+                    confirmText
+                  )}
                 </Button>
               </div>
             </div>

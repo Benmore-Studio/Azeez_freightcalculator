@@ -50,7 +50,7 @@ export default function MarketIntelligence({ marketData }) {
     <Card className="p-6 bg-white border-2 border-gray-200">
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
-        <span className="text-2xl">📊</span>
+        <TrendingUp className="text-blue-600" size={24} />
         <h3 className="text-xl font-bold text-gray-900">Market Intelligence</h3>
       </div>
 

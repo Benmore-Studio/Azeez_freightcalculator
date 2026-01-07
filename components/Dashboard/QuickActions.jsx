@@ -8,14 +8,6 @@ import Link from "next/link";
 export default function QuickActions() {
   const actions = [
     {
-      icon: FaBolt,
-      title: "Quick Quote",
-      description: "Get a fast estimate in seconds",
-      href: "/quick-quote",
-      color: "blue",
-      primary: true,
-    },
-    {
       icon: FaCalculator,
       title: "Full Calculator",
       description: "Detailed rate calculation",
@@ -65,10 +57,7 @@ export default function QuickActions() {
               <div className={`p-3 rounded-lg inline-block mb-3 ${
                 action.primary
                   ? "bg-white/20"
-                  : action.color === "blue" ? "bg-blue-100"
-                  : action.color === "green" ? "bg-green-100"
-                  : action.color === "purple" ? "bg-purple-100"
-                  : "bg-gray-100"
+                  : "bg-blue-100"
               }`}>
                 <Icon className="text-2xl" />
               </div>

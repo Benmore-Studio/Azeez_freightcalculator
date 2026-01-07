@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as quoteController from '../controllers/quote.controller.js';
+import * as pdfController from '../controllers/pdf.controller.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -10,6 +11,13 @@ const router = Router();
  * @access  Protected
  */
 router.post('/calculate', authenticate, quoteController.calculateRate);
+
+/**
+ * @route   POST /api/quotes/calculate-enriched
+ * @desc    Calculate rate with auto-fetched distance, weather, and tolls
+ * @access  Protected
+ */
+router.post('/calculate-enriched', authenticate, quoteController.calculateEnrichedRate);
 
 /**
  * @route   GET /api/quotes/recent
@@ -38,6 +46,14 @@ router.get('/', authenticate, quoteController.getQuotes);
  * @access  Protected
  */
 router.post('/', authenticate, quoteController.createQuote);
+
+/**
+ * @route   GET /api/quotes/:id/pdf
+ * @desc    Export quote as PDF
+ * @access  Protected
+ * @query   includeWeather, includeMarketIntel, includeTolls, includeCosts
+ */
+router.get('/:id/pdf', authenticate, pdfController.exportQuotePDF);
 
 /**
  * @route   GET /api/quotes/:id

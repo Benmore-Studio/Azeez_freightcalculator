@@ -1,17 +1,45 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaTruck, FaTimes, FaInfoCircle, FaMapMarkerAlt, FaCalendar, FaClock, FaChevronRight } from "react-icons/fa";
+import { FaTruck, FaTimes, FaInfoCircle, FaMapMarkerAlt, FaCalendar, FaClock, FaChevronRight, FaSpinner } from "react-icons/fa";
 import { Input, Select, Button, Checkbox } from "@/components/ui";
+import ScheduleFeasibility from "./ScheduleFeasibility";
+import { bookingsApi, quotesApi } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
-export default function BookingModal({ isOpen, onClose, handleViewBookingPolicies }) {
+export default function BookingModal({ isOpen, onClose, handleViewBookingPolicies, quoteData, onBookingComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Get default dates (pickup tomorrow, delivery in 5 days)
+  const getDefaultDates = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const delivery = new Date();
+    delivery.setDate(delivery.getDate() + 5);
+
+    const formatDate = (date) => {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${year}-${month}-${day}`;
+    };
+
+    return {
+      pickup: formatDate(tomorrow),
+      delivery: formatDate(delivery)
+    };
+  };
+
+  const defaultDates = getDefaultDates();
+
   const [formData, setFormData] = useState({
-    pickupDate: "20/10/2025",
+    pickupDate: defaultDates.pickup,
     pickupTime: "8:00 AM",
     pickupContactName: "",
     pickupContactPhone: "",
-    deliveryDate: "25/10/2025",
+    deliveryDate: defaultDates.delivery,
     deliveryTime: "4:00 PM",
     deliveryContactName: "",
     deliveryContactPhone: "",
@@ -19,12 +47,15 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
     paymentMethod: "quickpay",
     quickPayFee: 3,
     sendConfirmation: true,
-    confirmationEmail: "damolasalau23@gmail.com",
-    confirmationSMS: "09026969416",
+    confirmationEmail: "",
+    confirmationSMS: "",
     acceptTerms: false
   });
 
-  const totalRate = 0.0; // This would come from props in real implementation
+  // Extract data from quoteData props
+  const totalRate = quoteData?.recommendedRate?.total || 0.0;
+  const totalMiles = quoteData?.recommendedRate?.miles || quoteData?.routeData?.miles || 0;
+  const estimatedDriveHours = quoteData?.routeData?.duration || (totalMiles / 50); // Default 50 mph avg
 
   const calculatePayment = () => {
     const feeAmount = (totalRate * formData.quickPayFee) / 100;
@@ -38,23 +69,21 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
 
   const payment = calculatePayment();
 
-  // Mock data - would come from props in real implementation
+  // Extract load details from quoteData
   const loadDetails = {
-    origin: "",
-    destination: "",
-    distance: "",
-    loadType: "Dry"
+    origin: quoteData?.origin || "",
+    destination: quoteData?.destination || "",
+    distance: totalMiles,
+    loadType: quoteData?.breakdown?.loadType || "Dry"
   };
 
   const formatDateTime = (date, time) => {
     // Convert date format and time to readable format
-    const dateObj = new Date(date);
-    const options = { weekday: 'short', month: 'short', day: 'numeric' };
+    if (!date) return '-';
+    const dateObj = new Date(date + 'T00:00:00'); // Add time component for proper parsing
+    const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
     const formattedDate = dateObj.toLocaleDateString('en-US', options);
-
-    // Convert time to 24hr format for display
-    const timeStr = time.replace(/\s/g, '');
-    return `${formattedDate} at ${time.replace(' ', '')}`;
+    return `${formattedDate} at ${time || 'TBD'}`;
   };
 
   const getPaymentMethodLabel = () => {
@@ -74,11 +103,170 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user makes changes
+    if (error) setError(null);
+  };
+
+  const handleConfirmBooking = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Check if we already have a quoteId
+      let quoteId = quoteData?.quoteId || quoteData?.id || quoteData?._apiResult?.quoteId;
+
+      // If no quoteId, we need to save the quote first
+      if (!quoteId) {
+        console.log("No quoteId found, saving quote first...");
+
+        // Check if we have the necessary data to save the quote
+        const apiResult = quoteData?._apiResult;
+        const calculatorData = quoteData?._calculatorData;
+
+        if (!apiResult || !calculatorData) {
+          setError("Unable to book: Quote data is incomplete. Please recalculate the quote.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Map frontend vehicle types to API enum values
+        const vehicleTypeMap = {
+          "semi_truck": "semi",
+          "semi": "semi",
+          "sprinter_van": "sprinter",
+          "sprinter": "sprinter",
+          "box_truck": "box_truck",
+          "cargo_van": "cargo_van",
+          "reefer": "reefer",
+        };
+
+        // Map frontend load types to API enum values
+        const loadTypeMap = {
+          "full_load": "full_truckload",
+          "full_truckload": "full_truckload",
+          "partial": "partial",
+          "ltl": "ltl",
+        };
+
+        // Map frontend equipment types to freight class enum
+        const freightClassMap = {
+          "dry_van": "dry_van",
+          "refrigerated": "refrigerated",
+          "flatbed": "flatbed",
+          "general": "dry_van",
+        };
+
+        // Build the quote payload for saving
+        const quotePayload = {
+          // Route info (required)
+          originAddress: apiResult.routeData?.originFormatted || calculatorData.origin,
+          originCity: apiResult.routeData?.originCity,
+          originState: apiResult.routeData?.originState,
+          destinationAddress: apiResult.routeData?.destinationFormatted || calculatorData.destination,
+          destinationCity: apiResult.routeData?.destinationCity,
+          destinationState: apiResult.routeData?.destinationState,
+          totalMiles: apiResult.routeData?.calculatedMiles || apiResult.totalMiles || 0,
+          deadheadMiles: calculatorData.deadheadMiles || 0,
+
+          // Vehicle (required)
+          vehicleType: vehicleTypeMap[calculatorData.vehicleType] || "semi",
+          // Only include vehicleId if it's a valid string (UUID)
+          ...(calculatorData.vehicleId && typeof calculatorData.vehicleId === 'string'
+            ? { vehicleId: calculatorData.vehicleId }
+            : {}),
+
+          // Load details
+          loadWeight: calculatorData.weight || undefined,
+          loadType: loadTypeMap[calculatorData.loadType] || "full_truckload",
+          freightClass: freightClassMap[calculatorData.equipmentType] || freightClassMap[calculatorData.freightClass] || "dry_van",
+          statesCrossed: apiResult.routeData?.statesCrossed || [],
+
+          // Service options
+          isExpedite: calculatorData.deliveryUrgency === "express",
+          isTeam: calculatorData.driverType === "team",
+          isReefer: calculatorData.equipmentType === "refrigerated",
+          isRush: calculatorData.deliveryUrgency === "rush",
+          isSameDay: calculatorData.deliveryUrgency === "same_day",
+          requiresLiftgate: calculatorData.specialEquipment?.includes("liftgate"),
+          requiresPalletJack: calculatorData.specialEquipment?.includes("pallet_jack"),
+          requiresTracking: calculatorData.specialEquipment?.includes("temp_monitoring"),
+
+          // Schedule
+          pickupDate: formData.pickupDate,
+          pickupTimeWindow: formData.pickupTime,
+          deliveryDate: formData.deliveryDate,
+          deliveryTimeWindow: formData.deliveryTime,
+        };
+
+        try {
+          console.log("Saving quote with payload:", quotePayload);
+          const savedQuote = await quotesApi.createQuote(quotePayload);
+          quoteId = savedQuote.id;
+          console.log("Quote saved successfully with ID:", quoteId);
+        } catch (saveError) {
+          console.error("Failed to save quote:", saveError);
+          setError(`Failed to save quote: ${saveError.message}`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Now we have a quoteId, proceed with booking
+      const bookingPayload = {
+        quoteId,
+
+        // Pickup info
+        pickupDate: formData.pickupDate,
+        pickupTime: formData.pickupTime,
+        pickupContactName: formData.pickupContactName || undefined,
+        pickupContactPhone: formData.pickupContactPhone || undefined,
+
+        // Delivery info
+        deliveryDate: formData.deliveryDate,
+        deliveryTime: formData.deliveryTime,
+        deliveryContactName: formData.deliveryContactName || undefined,
+        deliveryContactPhone: formData.deliveryContactPhone || undefined,
+
+        // Special instructions
+        specialInstructions: formData.specialInstructions || undefined,
+
+        // Payment
+        paymentMethod: formData.paymentMethod,
+        quickpayFeeRate: formData.paymentMethod === "quickpay" ? formData.quickPayFee / 100 : undefined,
+
+        // Confirmation
+        sendConfirmation: formData.sendConfirmation,
+        confirmationEmail: formData.confirmationEmail || undefined,
+        confirmationSms: formData.confirmationSMS || undefined,
+      };
+
+      const booking = await bookingsApi.createBooking(bookingPayload);
+
+      showToast.success("Booking confirmed! You will receive a confirmation shortly.");
+
+      // Call the optional callback with booking and quoteId
+      if (onBookingComplete) {
+        onBookingComplete({ ...booking, quoteId });
+      }
+
+      // Close the modal
+      onClose();
+
+    } catch (err) {
+      console.error("Booking error:", err);
+      setError(err.message || "Failed to create booking. Please try again.");
+      showToast.error(err.message || "Failed to create booking");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleContinue = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
+    } else if (currentStep === 3) {
+      // On step 3, confirm the booking
+      handleConfirmBooking();
     }
   };
 
@@ -86,6 +274,8 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+    // Clear any errors when going back
+    if (error) setError(null);
   };
 
   const steps = [
@@ -95,7 +285,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+    <div className="fixed inset-0 bg-gray-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-lg sm:rounded-xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 md:p-6 flex items-center justify-between">
@@ -164,7 +354,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
                 <FaInfoCircle className="text-blue-600 text-base sm:text-lg md:text-xl mt-0.5 flex-shrink-0" />
                 <p className="text-sm sm:text-base text-blue-900">
-                  Schedule your pickup and delivery times for this load from to .
+                  Schedule your pickup and delivery times for this load{loadDetails.origin && loadDetails.destination ? ` from ${loadDetails.origin} to ${loadDetails.destination}` : ""}.
                 </p>
               </div>
 
@@ -173,7 +363,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                 {/* Pickup Information */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <FaMapMarkerAlt className="text-green-600 text-xl" />
+                    <FaMapMarkerAlt className="text-blue-600 text-xl" />
                     <h3 className="text-xl font-semibold text-gray-900">Pickup Information</h3>
                   </div>
 
@@ -183,12 +373,12 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                     </label>
                     <div className="relative">
                       <input
-                        type="text"
+                        type="date"
                         value={formData.pickupDate}
                         onChange={(e) => handleInputChange("pickupDate", e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <FaCalendar className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                   </div>
 
@@ -247,7 +437,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                 {/* Delivery Information */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <FaMapMarkerAlt className="text-red-600 text-xl" />
+                    <FaMapMarkerAlt className="text-orange-600 text-xl" />
                     <h3 className="text-xl font-semibold text-gray-900">Delivery Information</h3>
                   </div>
 
@@ -257,12 +447,12 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                     </label>
                     <div className="relative">
                       <input
-                        type="text"
+                        type="date"
                         value={formData.deliveryDate}
                         onChange={(e) => handleInputChange("deliveryDate", e.target.value)}
+                        min={formData.pickupDate || new Date().toISOString().split('T')[0]}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <FaCalendar className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                   </div>
 
@@ -318,6 +508,16 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                   </div>
                 </div>
               </div>
+
+              {/* Schedule Feasibility Analysis */}
+              <ScheduleFeasibility
+                pickupDate={formData.pickupDate}
+                pickupTime={formData.pickupTime}
+                deliveryDate={formData.deliveryDate}
+                deliveryTime={formData.deliveryTime}
+                estimatedDriveHours={estimatedDriveHours}
+                totalMiles={totalMiles}
+              />
 
               {/* Special Instructions */}
               <div>
@@ -393,7 +593,7 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                             <span>Original Rate:</span>
                             <span className="font-semibold">${payment.originalRate.toFixed(2)}</span>
                           </div>
-                          <div className="flex items-center justify-between text-red-600">
+                          <div className="flex items-center justify-between text-orange-600">
                             <span>Quick Pay Fee ({formData.quickPayFee}%):</span>
                             <span className="font-semibold">-${payment.feeAmount.toFixed(2)}</span>
                           </div>
@@ -607,6 +807,13 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
 
         {/* Modal Footer */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 sm:p-4 md:p-6">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500">
               <FaInfoCircle className="flex-shrink-0" />
@@ -626,23 +833,26 @@ export default function BookingModal({ isOpen, onClose, handleViewBookingPolicie
                   variant="secondary"
                   size="lg"
                   className="flex-1 sm:flex-none"
+                  disabled={isSubmitting}
                 >
                   Back
                 </Button>
               )}
               <Button
                 onClick={handleContinue}
-                disabled={currentStep === 3 && !formData.acceptTerms}
+                disabled={(currentStep === 3 && !formData.acceptTerms) || isSubmitting}
                 size="lg"
-                icon={<FaChevronRight />}
+                icon={isSubmitting ? <FaSpinner className="animate-spin" /> : <FaChevronRight />}
                 iconPosition="right"
                 className="flex-1 sm:flex-none"
               >
-                {currentStep === 1
+                {isSubmitting
+                  ? "Confirming..."
+                  : currentStep === 1
                   ? "Continue"
                   : currentStep === 2
                   ? "Review"
-                  : "Confirm"}
+                  : "Confirm Booking"}
               </Button>
             </div>
           </div>

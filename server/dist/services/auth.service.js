@@ -169,4 +169,52 @@ export async function getCurrentUser(userId) {
     }
     return sanitizeUser(user);
 }
+export async function deleteAccount(userId) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+    });
+    if (!user) {
+        throw ApiError.notFound('User not found');
+    }
+    // Soft delete: deactivate the account
+    // This preserves data for potential recovery and audit purposes
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            isActive: false,
+            // Anonymize email to allow re-registration with same email
+            email: `deleted_${userId}@deleted.account`,
+        },
+    });
+}
+export async function updateProfile(userId, input) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+    });
+    if (!user) {
+        throw ApiError.notFound('User not found');
+    }
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            ...(input.name && { name: input.name }),
+            ...(input.phone !== undefined && { phone: input.phone }),
+            ...(input.companyName !== undefined && { companyName: input.companyName }),
+            ...(input.onboardingCompleted !== undefined && { onboardingCompleted: input.onboardingCompleted }),
+        },
+        select: {
+            id: true,
+            email: true,
+            name: true,
+            phone: true,
+            companyName: true,
+            userType: true,
+            isVerified: true,
+            onboardingCompleted: true,
+            onboardingStep: true,
+            createdAt: true,
+        },
+    });
+    return sanitizeUser(updatedUser);
+}
 //# sourceMappingURL=auth.service.js.map

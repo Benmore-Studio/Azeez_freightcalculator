@@ -112,33 +112,46 @@ This is a **professional B2B tool** for trucking industry professionals. The UI 
 - **Trustworthy**: Clean, consistent, no gimmicks
 - **Efficient**: Information-dense but well-organized
 - **Professional**: Serious business tool, not playful consumer app
-- **Modern**: Contemporary SaaS aesthetics
+- **Modern**: Contemporary SaaS aesthetics with eye-catching accents
+- **Bold**: Orange accents that catch attention while remaining professional
 
 ### Color Palette (Strictly Follow)
 
-**Primary Colors:**
-- `blue-600` - Brand color, primary actions, active states
-- `blue-50/100` - Subtle backgrounds for blue elements
+**Primary Action Color (Orange):**
+- `orange-500` - Primary buttons, CTAs, brand accent, logo background
+- `orange-600` - Hover state for primary buttons
+- `orange-100` - Subtle backgrounds, badges, icon containers
+- `orange-700` - Text on orange-100 backgrounds
 
-**Success/Positive:**
-- `green-600` - Profit, positive metrics, success states
-- `green-50/100` - Subtle backgrounds for positive elements
+**Secondary/Neutral (Slate):**
+- `slate-900` - Headings, primary text, dark sections
+- `slate-800` - Secondary dark backgrounds
+- `slate-700` - Strong body text
+- `slate-600` - Body text, descriptions
+- `slate-500` - Muted text
+- `slate-400` - Placeholder text, subtle elements
+- `slate-300` - Borders for inputs/buttons
+- `slate-200` - Card borders, dividers
+- `slate-100` - Subtle backgrounds, icon containers
+- `slate-50` - Section backgrounds, page backgrounds
 
-**Warning/Attention:**
-- `orange-600` - Warnings, incomplete profile, attention needed
-- `orange-50/100` - Subtle backgrounds for warnings
+**Success/Profit (Emerald):**
+- `emerald-500` - Profit indicators, success states, positive metrics
+- `emerald-600` - Profit text, success emphasis
+- `emerald-400` - Success text on dark backgrounds
+- `emerald-100` - Success icon containers, subtle success backgrounds
 
-**Neutral (Most Common):**
-- `gray-900` - Headings, primary text
-- `gray-600` - Body text, descriptions
-- `gray-400` - Muted text, placeholder text
-- `gray-200` - Borders, dividers
-- `gray-50` - Subtle card backgrounds, section backgrounds
-- `white` - Card backgrounds, containers
+**Danger/Error:**
+- `red-500` - Error states, delete buttons
+- `red-600` - Danger button hover
+- `red-100` - Error backgrounds
+
+**Base:**
+- `white` - Card backgrounds, containers, page base
 
 **DO NOT USE:**
+- ❌ Blue as primary (legacy - being phased out)
 - ❌ Purple, pink, or bright/neon colors
-- ❌ Multiple gradient colors (blue-to-purple, orange-to-red)
 - ❌ Rainbow color schemes
 - ❌ Emojis anywhere in the UI
 
@@ -146,44 +159,79 @@ This is a **professional B2B tool** for trucking industry professionals. The UI 
 
 **Cards:**
 - Use `Card` component with white background
-- Border: `border-2 border-gray-200` for standard cards
-- Hover: `hover:border-blue-200 hover:shadow-md` for interactive cards
-- Padding: `p-6` for standard, `p-4` for compact
+- Border: `border-2 border-slate-200` for standard cards
+- Hover: `hover:border-orange-200 hover:shadow-xl` for interactive cards
+- Rounded corners: `rounded-2xl` for modern feel, `rounded-xl` for smaller cards
+- Padding: `p-8` for feature cards, `p-6` for standard, `p-4` for compact
 
 **Buttons:**
-- Primary: `bg-blue-600 hover:bg-blue-700 text-white`
-- Secondary: `bg-neutral-100 text-neutral-800 hover:bg-neutral-200`
-- Outline: `border-2 border-blue-600 text-blue-600 hover:bg-blue-50`
-- Danger: `bg-red-600 text-white hover:bg-red-700`
+- Primary: `bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-lg shadow-orange-500/25`
+- Secondary: `border-2 border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 rounded-xl`
+- Outline: `border-2 border-orange-500 text-orange-600 hover:bg-orange-50 rounded-xl`
+- Danger: `bg-red-500 hover:bg-red-600 text-white rounded-xl`
+- Ghost: `text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg`
 
 **Progress Bars:**
-- Background: `bg-gray-200`
-- Fill: `bg-blue-600` (solid, no gradients)
+- Background: `bg-slate-200`
+- Fill: `bg-orange-500` (solid, no gradients)
 - Height: `h-3` for standard, `h-2` for compact
 - Corners: `rounded-full`
 
 **Icons:**
 - Use **Lucide React** (`lucide-react`) or **React Icons** (`react-icons`) ONLY
 - Never use emojis
-- Standard sizes: `size={16}` (sm), `size={20}` (md), `size={24}` (lg)
-- Icon containers: `bg-blue-100 p-2 rounded-lg` with `text-blue-600` icon
+- Standard sizes: `size={16}` (sm), `size={20}` (md), `size={24}` (lg), `size={28}` (xl)
+- Icon containers by color:
+  - Orange: `bg-orange-100 p-3 rounded-xl` with `text-orange-500` icon
+  - Slate: `bg-slate-100 p-3 rounded-xl` with `text-slate-600` icon
+  - Emerald: `bg-emerald-100 p-3 rounded-xl` with `text-emerald-500` icon
 
 **Typography:**
-- H1: `text-3xl sm:text-4xl font-bold text-gray-900`
-- H2: `text-xl font-bold text-gray-900`
-- H3: `text-lg font-semibold text-gray-900`
-- Body: `text-base text-gray-600`
-- Small: `text-sm text-gray-600`
-- Muted: `text-xs text-gray-500`
+- H1 (Page titles): `text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight`
+- H2 (Section titles): `text-2xl sm:text-3xl font-bold text-slate-900`
+- H3 (Card titles): `text-xl font-bold text-slate-900`
+- H4 (Subsections): `text-lg font-semibold text-slate-900`
+- Body: `text-base text-slate-600 leading-relaxed`
+- Small: `text-sm text-slate-600`
+- Muted: `text-xs text-slate-500`
+- Accent text: `text-orange-500` for emphasis
+
+**Badges/Pills:**
+- Standard: `px-4 py-2 rounded-full text-sm font-medium`
+- Orange badge: `bg-orange-100 text-orange-700`
+- Slate badge: `bg-slate-200 text-slate-700`
+- Emerald badge: `bg-emerald-100 text-emerald-700`
+
+**Form Inputs:**
+- Border: `border-2 border-slate-200 focus:border-orange-500`
+- Rounded: `rounded-xl`
+- Focus ring: `focus:ring-2 focus:ring-orange-500/20`
+
+### Special UI Patterns
+
+**Hero Sections:**
+- Subtle gradient background: `bg-gradient-to-br from-slate-50 via-white to-orange-50/30`
+- Decorative blurred shapes for depth (use sparingly)
+- Split layouts with content left, visual right
+
+**Stats/Metrics Display:**
+- Dark background for emphasis: `bg-slate-900 rounded-2xl p-8`
+- White text for numbers: `text-white font-bold`
+- Orange accent for key metrics: `text-orange-400`
+- Emerald for profit/success: `text-emerald-400`
+
+**Floating Accents:**
+- Small floating badges: `absolute bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg`
+- Use for highlighting key info (e.g., "+28% Profit")
 
 ### User Feedback Patterns
 
 **DO:**
-- ✅ Console.log for temporary feedback during development
-- ✅ Toast notifications (when implemented)
+- ✅ Toast notifications for actions
 - ✅ Inline validation messages
 - ✅ Loading states with spinners
 - ✅ Empty states with helpful instructions
+- ✅ Success states with emerald indicators
 
 **DO NOT:**
 - ❌ `alert()` calls (unprofessional)
@@ -193,11 +241,11 @@ This is a **professional B2B tool** for trucking industry professionals. The UI 
 ### Animation & Interaction Standards
 
 **Hover States:**
-- Subtle transitions: `transition-all duration-200`
-- Border color changes: `hover:border-blue-200`
-- Background lightening: `hover:bg-gray-50`
-- Slight shadow: `hover:shadow-md`
-- Small movement: `hover:-translate-y-1` (use sparingly)
+- Subtle transitions: `transition-all duration-200` or `duration-300`
+- Border color changes: `hover:border-orange-200`
+- Background lightening: `hover:bg-slate-50`
+- Shadow elevation: `hover:shadow-xl`
+- Button arrow animation: `group-hover:translate-x-1 transition-transform`
 
 **DO NOT:**
 - ❌ Dramatic animations or bouncing
@@ -209,9 +257,14 @@ This is a **professional B2B tool** for trucking industry professionals. The UI 
 
 **Dashboard Layout:**
 - Max width container: `max-w-7xl mx-auto`
-- Padding: `px-4 sm:px-6 lg:px-8`
+- Padding: `px-4 sm:px-6 lg:px-8 py-8`
 - Section spacing: `space-y-8` or `mb-8`
-- Grid layouts: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8`
+- Grid layouts: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8`
+
+**Landing Page Layout:**
+- Full-width sections with contained content
+- Section padding: `py-20 sm:py-28`
+- Alternating backgrounds: white → slate-50 → white
 
 **Responsive Breakpoints:**
 - Mobile first: Base styles for mobile
@@ -221,13 +274,33 @@ This is a **professional B2B tool** for trucking industry professionals. The UI 
 
 ### Examples of Good vs Bad
 
-**✅ GOOD - Professional:**
+**✅ GOOD - Modern Professional:**
+```jsx
+<div className="bg-white rounded-2xl border-2 border-slate-200 p-8 hover:shadow-xl transition-all">
+  <div className="bg-orange-100 p-4 rounded-xl inline-block mb-6">
+    <Truck className="text-orange-500" size={28} />
+  </div>
+  <h3 className="text-xl font-bold text-slate-900 mb-3">Fleet Management</h3>
+  <p className="text-slate-600 leading-relaxed">
+    Save multiple vehicles with different specs.
+  </p>
+</div>
+```
+
+**✅ GOOD - CTA Button:**
+```jsx
+<button className="group bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 rounded-xl shadow-lg shadow-orange-500/25 inline-flex items-center gap-2">
+  Start Free Trial
+  <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+</button>
+```
+
+**❌ BAD - Old Blue Style (phase out):**
 ```jsx
 <Card className="p-6 bg-white border-2 border-gray-200">
-  <div className="bg-blue-100 p-3 rounded-lg inline-block mb-3">
+  <div className="bg-blue-100 p-3 rounded-lg">
     <Truck className="text-blue-600" size={24} />
   </div>
-  <h3 className="text-xl font-semibold text-gray-900">Your Vehicles</h3>
 </Card>
 ```
 
@@ -241,12 +314,15 @@ This is a **professional B2B tool** for trucking industry professionals. The UI 
 
 ### When Creating New Components
 
-1. **Check existing patterns first** - Look at Landing, Dashboard, Calculator components
-2. **Use the standard color palette** - No new colors without reason
-3. **Prefer white cards** - Colored backgrounds only for specific purposes (warnings, success)
-4. **Use professional icons** - Lucide or React Icons, never emojis
-5. **Follow typography scale** - Use predefined heading and text sizes
-6. **Keep animations subtle** - Simple transitions only
+1. **Use orange-500 for primary actions** - CTAs, active states, brand elements
+2. **Use slate for neutrals** - Replace gray with slate throughout
+3. **Use emerald for success/profit** - Money indicators, positive metrics
+4. **Prefer white cards with slate borders** - Clean, professional look
+5. **Use rounded-xl or rounded-2xl** - Modern, friendly corners
+6. **Add subtle shadows to buttons** - `shadow-lg shadow-orange-500/25`
+7. **Use professional icons** - Lucide or React Icons, never emojis
+8. **Follow typography scale** - Use predefined heading and text sizes
+9. **Keep animations subtle** - Simple transitions, arrow movements on hover
 7. **Maintain consistency** - Match existing component styling
 
 ### References

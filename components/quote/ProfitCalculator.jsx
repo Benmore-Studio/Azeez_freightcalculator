@@ -35,7 +35,7 @@ export default function ProfitCalculator({ profitData }) {
       bg: 'bg-red-100',
       border: 'border-red-300',
       text: 'text-red-700',
-      label: 'Low Profit ⚠️',
+      label: 'Low Profit',
       message: 'Below industry standard - Consider negotiating higher rate'
     };
     if (profitMargin < 20) return {
@@ -49,14 +49,14 @@ export default function ProfitCalculator({ profitData }) {
       bg: 'bg-blue-100',
       border: 'border-blue-300',
       text: 'text-blue-700',
-      label: 'Good Profit ✓',
+      label: 'Good Profit',
       message: 'Healthy margin - This is a profitable load'
     };
     return {
       bg: 'bg-green-100',
       border: 'border-green-300',
       text: 'text-green-700',
-      label: 'Excellent Profit ✓✓',
+      label: 'Excellent Profit',
       message: 'Outstanding margin - Highly profitable load'
     };
   };
@@ -72,7 +72,7 @@ export default function ProfitCalculator({ profitData }) {
     <Card className={`p-6 bg-white border-2 ${profitColor.border}`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <DollarSign className="text-green-600" size={24} />
+        <DollarSign className="text-blue-600" size={24} />
         <h3 className="text-xl font-bold text-gray-900">Trip Profitability</h3>
       </div>
 
@@ -124,7 +124,7 @@ export default function ProfitCalculator({ profitData }) {
         <div className="relative h-16 bg-gray-200 rounded-lg overflow-hidden">
           {/* Costs portion */}
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center text-white font-bold transition-all duration-500"
+            className="absolute left-0 top-0 h-full bg-gray-500 flex items-center justify-center text-white font-bold transition-all duration-500"
             style={{ width: `${costPercent}%` }}
           >
             {costPercent > 15 && <span>Costs ({costPercent.toFixed(0)}%)</span>}
@@ -133,10 +133,10 @@ export default function ProfitCalculator({ profitData }) {
           {/* Profit portion */}
           <div
             className={`absolute top-0 h-full flex items-center justify-center text-white font-bold transition-all duration-500 ${
-              profitMargin < 10 ? 'bg-gradient-to-r from-red-500 to-red-600' :
-              profitMargin < 20 ? 'bg-gradient-to-r from-orange-500 to-orange-600' :
-              profitMargin < 30 ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
-              'bg-gradient-to-r from-green-500 to-green-600'
+              profitMargin < 10 ? 'bg-red-600' :
+              profitMargin < 20 ? 'bg-orange-600' :
+              profitMargin < 30 ? 'bg-blue-600' :
+              'bg-green-600'
             }`}
             style={{ left: `${costPercent}%`, width: `${profitPercent}%` }}
           >
@@ -214,7 +214,7 @@ export default function ProfitCalculator({ profitData }) {
           )}
           <div>
             <p className={`font-bold ${profitColor.text} mb-1`}>
-              {profitMargin >= 20 ? '✓ This is a PROFITABLE load' : '⚠️ Margin Warning'}
+              {profitMargin >= 20 ? 'This is a PROFITABLE load' : 'Margin Warning'}
             </p>
             <p className={`text-sm ${profitColor.text}`}>
               {profitColor.message}

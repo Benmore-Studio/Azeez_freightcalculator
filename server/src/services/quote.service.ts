@@ -1,6 +1,13 @@
 import { prisma } from './prisma.js';
 import { ApiError } from '../utils/ApiError.js';
-import { calculateRate, type RateCalculationInput, type RateCalculationResult } from './rate.service.js';
+import {
+  calculateRate,
+  calculateEnrichedRate,
+  type RateCalculationInput,
+  type RateCalculationResult,
+  type EnrichedRateInput,
+  type EnrichedRateResult
+} from './rate.service.js';
 import type { QuoteStatus } from '../../../lib/generated/prisma/index.js';
 
 export interface CreateQuoteInput extends RateCalculationInput {
@@ -246,6 +253,13 @@ export async function deleteQuote(userId: string, quoteId: string) {
  */
 export async function previewRate(userId: string, input: RateCalculationInput) {
   return calculateRate(userId, input);
+}
+
+/**
+ * Calculate enriched rate with auto-fetched distance, weather, and tolls (preview)
+ */
+export async function previewEnrichedRate(userId: string, input: EnrichedRateInput): Promise<EnrichedRateResult> {
+  return calculateEnrichedRate(userId, input);
 }
 
 /**

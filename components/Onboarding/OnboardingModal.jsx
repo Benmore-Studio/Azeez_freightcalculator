@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import showToast from "@/lib/toast";
 import { settingsApi, vehiclesApi, authApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import Step1UserType from "./Step1UserType";
 import Step2BasicInfo from "./Step2BasicInfo";
 import Step3CostCalc from "./Step3CostCalc";
 import Step4VehicleInfo from "./Step4VehicleInfo";
@@ -41,7 +40,21 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
     },
   });
 
-  const totalSteps = 5;
+  const totalSteps = 4;
+
+  // Sync initialData when modal opens (fixes prefilling from signup)
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setOnboardingData((prev) => ({
+        ...prev,
+        userType: initialData.userType || prev.userType,
+        name: initialData.name || prev.name,
+        email: initialData.email || prev.email,
+      }));
+      // Reset to step 1 when opening fresh
+      setCurrentStep(1);
+    }
+  }, [isOpen, initialData]);
 
   const handleNext = (data) => {
     setOnboardingData((prev) => ({ ...prev, ...data }));
@@ -87,9 +100,23 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
    * Save onboarding data to the database
    */
   const saveOnboardingData = async (finalData) => {
-    const results = { settings: false, vehicle: false };
+    const results = { profile: false, settings: false, vehicle: false };
 
-    // 1. Save user settings
+    // 1. Save user profile (phone, company) if provided
+    if (finalData.phone || finalData.company) {
+      try {
+        await authApi.updateProfile({
+          phone: finalData.phone || undefined,
+          companyName: finalData.company || undefined,
+        });
+        results.profile = true;
+        console.log("Profile saved successfully");
+      } catch (error) {
+        console.error("Failed to save profile:", error);
+      }
+    }
+
+    // 2. Save user settings
     try {
       const annualMiles = finalData.costData?.frequency === "monthly"
         ? (parseInt(finalData.costData.milesdriven) || 10000) * 12
@@ -112,21 +139,45 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
       console.error("Failed to save settings:", error);
     }
 
-    // 2. Save vehicle if data was provided
-    if (finalData.vehicleData?.type && finalData.vehicleData?.year) {
+    // 3. Save vehicle if vehicle type was selected (year/make/model are optional)
+    if (finalData.vehicleData?.type) {
       try {
+        // Build vehicle name from available data
+        const nameParts = [
+          finalData.vehicleData.year,
+          finalData.vehicleData.make,
+          finalData.vehicleData.model,
+        ].filter(Boolean);
+        const vehicleName = nameParts.length > 0 ? nameParts.join(" ") : "My Vehicle";
+
         const vehiclePayload = {
-          name: `${finalData.vehicleData.year} ${finalData.vehicleData.make} ${finalData.vehicleData.model}`.trim() || "My Vehicle",
-          type: mapVehicleType(finalData.vehicleData.type),
-          year: parseInt(finalData.vehicleData.year) || new Date().getFullYear(),
-          make: finalData.vehicleData.make || "Unknown",
-          model: finalData.vehicleData.model || "Unknown",
-          vin: finalData.vehicleData.vin || null,
-          mpg: parseFloat(finalData.vehicleData.mpg) || 6.5,
-          fuelType: finalData.vehicleData.fuelType || "diesel",
-          equipment: mapEquipmentType(finalData.vehicleData.equipment?.[0]) || "dry_van",
+          name: vehicleName,
+          vehicleType: mapVehicleType(finalData.vehicleData.type),
           isPrimary: true,
         };
+
+        // Only include optional fields if they have values
+        if (finalData.vehicleData.year) {
+          vehiclePayload.year = parseInt(finalData.vehicleData.year);
+        }
+        if (finalData.vehicleData.make) {
+          vehiclePayload.make = finalData.vehicleData.make;
+        }
+        if (finalData.vehicleData.model) {
+          vehiclePayload.model = finalData.vehicleData.model;
+        }
+        if (finalData.vehicleData.vin) {
+          vehiclePayload.vin = finalData.vehicleData.vin;
+        }
+        if (finalData.vehicleData.mpg) {
+          vehiclePayload.mpg = parseFloat(finalData.vehicleData.mpg);
+        }
+        if (finalData.vehicleData.fuelType) {
+          vehiclePayload.fuelType = finalData.vehicleData.fuelType.toLowerCase();
+        }
+        if (finalData.vehicleData.equipment?.[0]) {
+          vehiclePayload.equipmentType = mapEquipmentType(finalData.vehicleData.equipment[0]);
+        }
 
         await vehiclesApi.createVehicle(vehiclePayload);
         results.vehicle = true;
@@ -147,6 +198,9 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
     try {
       // Save onboarding data to database
       const results = await saveOnboardingData(finalData);
+
+      // Mark onboarding as completed
+      await authApi.updateProfile({ onboardingCompleted: true });
 
       // Refresh user data to update onboarding status
       if (refreshUser) {
@@ -173,7 +227,7 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50">
       <div className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden">
         {/* Header with Progress */}
         <div className="bg-blue-600 p-6">
@@ -209,18 +263,15 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
           {/* Step Labels */}
           <div className="flex justify-between mt-4 text-xs text-blue-100">
             <span className={currentStep === 1 ? "text-white font-semibold" : ""}>
-              User Type
-            </span>
-            <span className={currentStep === 2 ? "text-white font-semibold" : ""}>
               Basic Info
             </span>
-            <span className={currentStep === 3 ? "text-white font-semibold" : ""}>
+            <span className={currentStep === 2 ? "text-white font-semibold" : ""}>
               Costs
             </span>
-            <span className={currentStep === 4 ? "text-white font-semibold" : ""}>
+            <span className={currentStep === 3 ? "text-white font-semibold" : ""}>
               Vehicle
             </span>
-            <span className={currentStep === 5 ? "text-white font-semibold" : ""}>
+            <span className={currentStep === 4 ? "text-white font-semibold" : ""}>
               Review
             </span>
           </div>
@@ -229,19 +280,12 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
         {/* Content Area - Scrollable */}
         <div className="overflow-y-auto max-h-[calc(90vh-180px)] p-6">
           {currentStep === 1 && (
-            <Step1UserType
+            <Step2BasicInfo
               initialData={onboardingData}
               onNext={handleNext}
             />
           )}
           {currentStep === 2 && (
-            <Step2BasicInfo
-              initialData={onboardingData}
-              onNext={handleNext}
-              onPrevious={handlePrevious}
-            />
-          )}
-          {currentStep === 3 && (
             <Step3CostCalc
               initialData={onboardingData}
               onNext={handleNext}
@@ -249,7 +293,7 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
               onSkip={handleSkip}
             />
           )}
-          {currentStep === 4 && (
+          {currentStep === 3 && (
             <Step4VehicleInfo
               initialData={onboardingData}
               onNext={handleNext}
@@ -257,7 +301,7 @@ export default function OnboardingModal({ isOpen, onClose, initialData = {} }) {
               onSkip={handleSkip}
             />
           )}
-          {currentStep === 5 && (
+          {currentStep === 4 && (
             <Step5Review
               data={onboardingData}
               onPrevious={handlePrevious}

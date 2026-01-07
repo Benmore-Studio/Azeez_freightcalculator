@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaUser, FaEnvelope, FaPhone, FaBuilding } from "react-icons/fa";
 import { Input, Button } from "@/components/ui";
 
@@ -13,6 +13,17 @@ export default function Step2BasicInfo({ initialData, onNext, onPrevious }) {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Sync when initialData changes (e.g., from signup prefill)
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      name: initialData.name || prev.name,
+      email: initialData.email || prev.email,
+      phone: initialData.phone || prev.phone,
+      company: initialData.company || prev.company,
+    }));
+  }, [initialData.name, initialData.email, initialData.phone, initialData.company]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -111,10 +122,12 @@ export default function Step2BasicInfo({ initialData, onNext, onPrevious }) {
         />
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button onClick={onPrevious} variant="outline" size="lg">
-          Back
-        </Button>
+      <div className={`flex pt-4 ${onPrevious ? "justify-between" : "justify-end"}`}>
+        {onPrevious && (
+          <Button onClick={onPrevious} variant="outline" size="lg">
+            Back
+          </Button>
+        )}
         <Button onClick={handleContinue} size="lg">
           Continue
         </Button>

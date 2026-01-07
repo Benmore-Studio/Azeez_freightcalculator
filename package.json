@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:server": "npm run dev --prefix server",
-    "dev:all": "npm run dev & npm run dev:server",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "npx prisma generate && next build",
     "build:server": "npm run build --prefix server",
     "start": "next start",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "concurrently": "^9.2.1",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
